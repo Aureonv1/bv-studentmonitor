@@ -90,6 +90,12 @@ CREATE TABLE IF NOT EXISTS `students` (
     FOREIGN KEY (`academic_year_id`) REFERENCES `academic_years` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `student_code_counter` (
+  `id` TINYINT UNSIGNED NOT NULL PRIMARY KEY,
+  `next_number` BIGINT UNSIGNED NOT NULL DEFAULT 1,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE IF NOT EXISTS `student_accounts` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `student_id` INT NOT NULL,
@@ -171,6 +177,21 @@ ALTER TABLE `students`
 UPDATE `students`
 SET `student_code` = CONCAT('STU', LPAD(`id`, 6, '0'))
 WHERE `student_code` IS NULL OR `student_code` = '';
+
+INSERT INTO `student_code_counter` (`id`, `next_number`)
+VALUES (1, 1)
+ON DUPLICATE KEY UPDATE `next_number` = `next_number`;
+
+UPDATE `student_code_counter`
+SET `next_number` = GREATEST(
+  `next_number`,
+  (
+    SELECT COALESCE(MAX(CAST(SUBSTRING(`student_code`, 4) AS UNSIGNED)), 0) + 1
+    FROM `students`
+    WHERE `student_code` REGEXP '^STU[0-9]+$'
+  )
+)
+WHERE `id` = 1;
 
 ALTER TABLE `students`
   ADD INDEX IF NOT EXISTS `idx_students_year_class_name` (`academic_year_id`, `class_id`, `name`);

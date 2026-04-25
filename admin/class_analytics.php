@@ -15,6 +15,39 @@ $filterExam = trim((string) ($_GET['exam_name'] ?? ''));
 $viewRequested = (string) ($_GET['view'] ?? '') === '1';
 $canLoad = $viewRequested && $filterClass !== '';
 
+if (isset($_GET['fetch_exams']) && (string) $_GET['fetch_exams'] === '1') {
+    header('Content-Type: application/json; charset=UTF-8');
+
+    $classId = (int) ($_GET['class_id'] ?? 0);
+    $yearId = (int) ($_GET['year_id'] ?? 0);
+    if ($classId <= 0) {
+        echo json_encode(['success' => true, 'exams' => []]);
+        exit;
+    }
+
+    $sql = "
+        SELECT DISTINCT COALESCE(NULLIF(m.exam_name, ''), 'Term Exam') AS exam_name
+        FROM marks m
+        JOIN students s ON s.id = m.student_id
+        WHERE s.class_id = ?
+    ";
+    $params = [$classId];
+    if ($yearId > 0) {
+        $sql .= " AND s.academic_year_id = ?";
+        $params[] = $yearId;
+    }
+    $sql .= " ORDER BY exam_name ASC";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $exams = array_values(array_filter(array_map(static function ($row) {
+        return trim((string) ($row['exam_name'] ?? ''));
+    }, $stmt->fetchAll())));
+
+    echo json_encode(['success' => true, 'exams' => $exams]);
+    exit;
+}
+
 $notice = null;
 if ($viewRequested && $filterClass === '') {
     $notice = ['type' => 'error', 'text' => 'Select a class and click View Analytics.'];
@@ -274,6 +307,7 @@ $exportQuery = $queryWith(['export' => 'csv', 'view' => '1']);
                     <a href="manage_students" class="sb-link"><i class="fas fa-database"></i> Data Manager</a>
                     <a href="student_credentials" class="sb-link"><i class="fas fa-id-card"></i> Student Credentials</a>
                     <a href="manage_academics" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
+                    <a href="export_student_ids" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
                 <?php endif; ?>
                 <?php if (admin_can('manage_marks')): ?><a href="manage_marks" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a><?php endif; ?>
                 <?php if (admin_can('import_csv')): ?><a href="import_csv" class="sb-link"><i class="fas fa-upload"></i> Import Marks</a><?php endif; ?>
@@ -447,8 +481,60 @@ $exportQuery = $queryWith(['export' => 'csv', 'view' => '1']);
         const sidebar = document.getElementById('sidebar');
         const sbOverlay = document.getElementById('sbOverlay');
         const sbToggle = document.getElementById('sbToggle');
+        const classSelect = document.getElementById('class_id');
+        const yearSelect = document.getElementById('year_id');
+        const examSelect = document.getElementById('exam_name');
+        const selectedExamFromServer = <?= json_encode($filterExam, JSON_UNESCAPED_UNICODE) ?>;
         sbToggle?.addEventListener('click', () => { sidebar.classList.toggle('open'); sbOverlay.classList.toggle('show'); });
         sbOverlay?.addEventListener('click', () => { sidebar.classList.remove('open'); sbOverlay.classList.remove('show'); });
+
+        async function refreshExamOptions(keepSelection = true) {
+            if (!classSelect || !yearSelect || !examSelect) return;
+
+            const classId = classSelect.value || '';
+            const yearId = yearSelect.value || '';
+
+            examSelect.innerHTML = '<option value="">All Exams</option>';
+            if (!classId) {
+                examSelect.disabled = true;
+                return;
+            }
+
+            examSelect.disabled = false;
+            const params = new URLSearchParams({ fetch_exams: '1', class_id: classId });
+            if (yearId) params.set('year_id', yearId);
+
+            try {
+                const response = await fetch(`class_analytics?${params.toString()}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (!response.ok) return;
+                const data = await response.json();
+                if (!data || !Array.isArray(data.exams)) return;
+
+                data.exams.forEach((exam) => {
+                    const option = document.createElement('option');
+                    option.value = String(exam);
+                    option.textContent = String(exam);
+                    examSelect.appendChild(option);
+                });
+
+                if (keepSelection && selectedExamFromServer) {
+                    const exists = Array.from(examSelect.options).some((opt) => opt.value === selectedExamFromServer);
+                    if (exists) {
+                        examSelect.value = selectedExamFromServer;
+                    }
+                }
+            } catch (e) {
+                // ignore fetch issues and keep fallback option
+            }
+        }
+
+        classSelect?.addEventListener('change', () => refreshExamOptions(false));
+        yearSelect?.addEventListener('change', () => refreshExamOptions(false));
+        refreshExamOptions(true);
     </script>
 </body>
 </html>
+
+

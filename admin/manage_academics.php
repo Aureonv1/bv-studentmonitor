@@ -99,6 +99,7 @@ $years = $pdo->query("SELECT y.id, y.year_name, COUNT(s.id) AS students FROM aca
         <a href="manage_students" class="sb-link"><i class="fas fa-database"></i> Data Manager</a>
         <a href="student_credentials" class="sb-link"><i class="fas fa-id-card"></i> Student Credentials</a>
         <a href="manage_academics" class="sb-link active"><i class="fas fa-graduation-cap"></i> Academics</a>
+                    <a href="export_student_ids" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
         <?php if (admin_can('manage_marks')): ?><a href="manage_marks" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a><?php endif; ?>
         <?php if (admin_can('import_csv')): ?><a href="import_csv" class="sb-link"><i class="fas fa-upload"></i> Import Marks</a><?php endif; ?>
         <div class="sb-label">System</div>
@@ -166,3 +167,5 @@ $years = $pdo->query("SELECT y.id, y.year_name, COUNT(s.id) AS students FROM aca
 <script>const sidebar=document.getElementById('sidebar');const sbOverlay=document.getElementById('sbOverlay');const sbToggle=document.getElementById('sbToggle');sbToggle?.addEventListener('click',()=>{sidebar.classList.toggle('open');sbOverlay.classList.toggle('show');});sbOverlay?.addEventListener('click',()=>{sidebar.classList.remove('open');sbOverlay.classList.remove('show');});</script>
 </body>
 </html>
+
+

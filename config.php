@@ -116,6 +116,14 @@ if (!function_exists('ensure_schema')) {
         ");
 
         $pdo->exec("
+            CREATE TABLE IF NOT EXISTS student_code_counter (
+                id TINYINT UNSIGNED NOT NULL PRIMARY KEY,
+                next_number BIGINT UNSIGNED NOT NULL DEFAULT 1,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
+        ");
+
+        $pdo->exec("
             CREATE TABLE IF NOT EXISTS imports_log (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 admin_id INT NULL,
@@ -196,6 +204,11 @@ if (!function_exists('ensure_schema')) {
             "ALTER TABLE students ADD COLUMN student_code VARCHAR(24) NULL AFTER id",
             "ALTER TABLE students ADD UNIQUE KEY uq_students_code (student_code)",
             "UPDATE students SET student_code = CONCAT('STU', LPAD(id, 6, '0')) WHERE student_code IS NULL OR student_code = ''",
+            "CREATE TABLE IF NOT EXISTS student_code_counter (
+                id TINYINT UNSIGNED NOT NULL PRIMARY KEY,
+                next_number BIGINT UNSIGNED NOT NULL DEFAULT 1,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci",
             "CREATE TABLE IF NOT EXISTS student_accounts (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 student_id INT NOT NULL,
@@ -292,6 +305,27 @@ if (!function_exists('ensure_schema')) {
         // Backfill student codes for legacy rows.
         try {
             $pdo->exec("UPDATE students SET student_code = CONCAT('STU', LPAD(id, 6, '0')) WHERE student_code IS NULL OR student_code = ''");
+        } catch (Throwable $e) {
+            // ignore
+        }
+
+        // Initialize and advance global student code counter (never reuse IDs).
+        try {
+            $pdo->exec("
+                INSERT INTO student_code_counter (id, next_number)
+                VALUES (1, 1)
+                ON DUPLICATE KEY UPDATE next_number = next_number
+            ");
+
+            $maxCodeNumber = (int) $pdo->query("
+                SELECT COALESCE(MAX(CAST(SUBSTRING(student_code, 4) AS UNSIGNED)), 0)
+                FROM students
+                WHERE student_code REGEXP '^STU[0-9]+$'
+            ")->fetchColumn();
+
+            $bumpTo = max(1, $maxCodeNumber + 1);
+            $bumpStmt = $pdo->prepare("UPDATE student_code_counter SET next_number = GREATEST(next_number, ?) WHERE id = 1");
+            $bumpStmt->execute([$bumpTo]);
         } catch (Throwable $e) {
             // ignore
         }
@@ -489,24 +523,39 @@ if (!function_exists('assign_student_code')) {
             return $existing;
         }
 
-        $base = format_student_code($studentId);
-        $candidate = $base;
-        $suffix = 0;
-        $check = $pdo->prepare("SELECT id FROM students WHERE student_code = ? AND id <> ? LIMIT 1");
-        $update = $pdo->prepare("UPDATE students SET student_code = ? WHERE id = ?");
+        $pdo->exec("
+            INSERT INTO student_code_counter (id, next_number)
+            VALUES (1, 1)
+            ON DUPLICATE KEY UPDATE next_number = next_number
+        ");
 
-        while (true) {
-            $check->execute([$candidate, $studentId]);
-            $owner = (int) $check->fetchColumn();
-            if ($owner === 0) {
-                $update->execute([$candidate, $studentId]);
-                return $candidate;
+        $updateStmt = $pdo->prepare("UPDATE students SET student_code = ? WHERE id = ? AND (student_code IS NULL OR student_code = '')");
+
+        for ($attempt = 0; $attempt < 20; $attempt++) {
+            $pdo->exec("UPDATE student_code_counter SET next_number = LAST_INSERT_ID(next_number + 1) WHERE id = 1");
+            $lastInserted = (int) $pdo->query("SELECT LAST_INSERT_ID()")->fetchColumn();
+            $codeNumber = max(1, $lastInserted - 1);
+            $candidate = format_student_code($codeNumber);
+
+            try {
+                $updateStmt->execute([$candidate, $studentId]);
+                if ($updateStmt->rowCount() > 0) {
+                    return $candidate;
+                }
+
+                $stmt->execute([$studentId]);
+                $alreadySet = strtoupper(trim((string) $stmt->fetchColumn()));
+                if ($alreadySet !== '') {
+                    return $alreadySet;
+                }
+            } catch (PDOException $e) {
+                if ($e->getCode() !== '23000') {
+                    throw $e;
+                }
             }
-            $suffix++;
-            $suffixToken = (string) $suffix;
-            $prefix = substr($base, 0, max(4, 24 - strlen($suffixToken)));
-            $candidate = strtoupper($prefix . $suffixToken);
         }
+
+        throw new RuntimeException('Unable to generate a unique student code right now. Please try again.');
     }
 }
 

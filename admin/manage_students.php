@@ -329,6 +329,7 @@ if ($editYearId > 0) {
                 <a href="manage_students" class="sb-link active"><i class="fas fa-database"></i> Data Manager</a>
                 <a href="student_credentials" class="sb-link"><i class="fas fa-id-card"></i> Student Credentials</a>
                 <a href="manage_academics" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
+                    <a href="export_student_ids" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
                 <?php if (admin_can('manage_marks')): ?>
                     <a href="manage_marks" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a>
                 <?php endif; ?>
@@ -631,6 +632,18 @@ if ($editYearId > 0) {
                             </div>
                             <button type="submit" class="notion-btn notion-btn-primary notion-btn-sm"><i class="fas fa-search"></i> Filter</button>
                             <a href="manage_students.php" class="notion-btn notion-btn-ghost notion-btn-sm">Clear</a>
+                            <?php if ($filterClass !== ''): ?>
+                                <a
+                                    href="export_student_roster?class_id=<?= urlencode((string) $filterClass) ?><?= $filterYear !== '' ? '&year_id=' . urlencode((string) $filterYear) : '' ?>"
+                                    class="notion-btn notion-btn-primary notion-btn-sm"
+                                >
+                                    <i class="fas fa-id-card"></i> Export IDs
+                                </a>
+                            <?php else: ?>
+                                <button type="button" class="notion-btn notion-btn-ghost notion-btn-sm" disabled title="Select a class to export IDs">
+                                    <i class="fas fa-id-card"></i> Export IDs
+                                </button>
+                            <?php endif; ?>
                         </form>
 
                         <div class="notion-table-wrap">
@@ -732,6 +745,8 @@ if ($editYearId > 0) {
     </script>
 </body>
 </html>
+
+
 
 
 

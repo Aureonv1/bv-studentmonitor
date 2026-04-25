@@ -9,6 +9,19 @@ require_admin_permission('manage_students');
 $classId = (int) ($_GET['class_id'] ?? 0);
 $yearId = (int) ($_GET['year_id'] ?? 0);
 
+if ($classId <= 0) {
+    http_response_code(400);
+    echo 'Please select a class before exporting the student ID roster.';
+    exit;
+}
+
+$classNameStmt = $pdo->prepare("SELECT class_name FROM classes WHERE id = ? LIMIT 1");
+$classNameStmt->execute([$classId]);
+$className = (string) ($classNameStmt->fetchColumn() ?? '');
+if ($className === '') {
+    $className = 'class_' . $classId;
+}
+
 $where = [];
 $params = [];
 if ($classId > 0) {
@@ -46,7 +59,12 @@ foreach ($rows as &$row) {
 }
 unset($row);
 
-$filename = 'student_roster_' . date('Ymd_His') . '.csv';
+$safeClassName = preg_replace('/[^A-Za-z0-9]+/', '_', $className) ?? 'class';
+$safeClassName = trim($safeClassName, '_');
+if ($safeClassName === '') {
+    $safeClassName = 'class';
+}
+$filename = 'student_ids_' . $safeClassName . '_' . date('Ymd_His') . '.csv';
 header('Content-Type: text/csv; charset=UTF-8');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 header('Pragma: no-cache');

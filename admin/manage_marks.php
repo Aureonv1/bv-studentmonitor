@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 session_start();
 require_once '../config.php';
 require_once 'admin_auth.php';
@@ -320,6 +320,7 @@ if ($editMarkId > 0) {
                     <a href="manage_students" class="sb-link"><i class="fas fa-database"></i> Data Manager</a>
                     <a href="student_credentials" class="sb-link"><i class="fas fa-id-card"></i> Student Credentials</a>
                     <a href="manage_academics" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
+                    <a href="export_student_ids" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
                 <?php endif; ?>
                 <a href="manage_marks" class="sb-link active"><i class="fas fa-pen-to-square"></i> Marks Manager</a>
                 <?php if (admin_can('import_csv')): ?><a href="import_csv" class="sb-link"><i class="fas fa-upload"></i> Import Marks</a><?php endif; ?>
@@ -654,3 +655,5 @@ if ($editMarkId > 0) {
     </script>
 </body>
 </html>
+
+
