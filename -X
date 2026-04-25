@@ -1,0 +1,7 @@
+HTTP/1.1 302 Found
+Date: Wed, 22 Apr 2026 19:55:48 GMT
+Server: Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12
+Location: http://localhost/Bv-StudentMonitor/search_student
+Content-Length: 332
+Content-Type: text/html; charset=iso-8859-1
+
