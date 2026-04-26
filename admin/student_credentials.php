@@ -70,6 +70,7 @@ unset($_SESSION['admin_flash']);
 $search = trim((string) ($_GET['search'] ?? ''));
 $classFilter = (int) ($_GET['class_id'] ?? 0);
 $yearFilter = (int) ($_GET['year_id'] ?? 0);
+$studentFilter = (int) ($_GET['student_id'] ?? 0);
 
 $sql = "\n    SELECT\n        s.id,\n        s.name AS student_name,\n        c.class_name,\n        y.year_name,\n        sa.username,\n        sa.password_plain,\n        sa.is_active,\n        sa.last_login_at\n    FROM students s\n    LEFT JOIN classes c ON c.id = s.class_id\n    LEFT JOIN academic_years y ON y.id = s.academic_year_id\n    LEFT JOIN student_accounts sa ON sa.student_id = s.id\n    WHERE 1=1\n";
 $params = [];
@@ -85,6 +86,10 @@ if ($classFilter > 0) {
 if ($yearFilter > 0) {
     $sql .= " AND s.academic_year_id = ?";
     $params[] = $yearFilter;
+}
+if ($studentFilter > 0) {
+    $sql .= " AND s.id = ?";
+    $params[] = $studentFilter;
 }
 $sql .= " ORDER BY y.year_name DESC, c.class_name ASC, s.name ASC";
 
@@ -113,7 +118,7 @@ $totals['missing'] = max(0, $totals['students'] - $totals['ready']);
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/admin.css">
 </head>
-<body>
+<body class="receipt-print-page">
 <div class="bg-mesh"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
 <div class="admin-layout">
 <aside class="sidebar" id="sidebar">
@@ -137,7 +142,7 @@ $totals['missing'] = max(0, $totals['students'] - $totals['ready']);
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="topbar-left"><button class="sb-toggle" id="sbToggle"><i class="fas fa-bars"></i></button><h1>Student Login Credentials</h1></div>
-        <div class="topbar-meta"><a href="student_credentials?action=export_csv" class="topbar-action"><i class="fas fa-file-csv"></i> Export CSV</a></div>
+        <div class="topbar-meta"><button type="button" class="topbar-action" id="printVisibleReceipts"><i class="fas fa-receipt"></i> Print Receipts</button><a href="student_credentials?action=export_csv" class="topbar-action"><i class="fas fa-file-csv"></i> Export CSV</a></div>
     </div>
 
     <div class="admin-body dashboard-stack">
@@ -156,6 +161,7 @@ $totals['missing'] = max(0, $totals['students'] - $totals['ready']);
                 <form method="POST" style="display:flex;gap:0.7rem;flex-wrap:wrap;">
                     <input type="hidden" name="action" value="generate_missing">
                     <button type="submit" class="notion-btn notion-btn-primary"><i class="fas fa-user-plus"></i> Generate Missing Accounts</button>
+                    <button type="button" class="notion-btn notion-btn-ghost" id="printVisibleReceiptsPanel"><i class="fas fa-print"></i> Print Visible Receipts</button>
                     <a href="student_credentials?action=export_csv" class="notion-btn notion-btn-ghost"><i class="fas fa-file-export"></i> Export Credentials</a>
                 </form>
             </div>
@@ -170,6 +176,7 @@ $totals['missing'] = max(0, $totals['students'] - $totals['ready']);
                     <div class="notion-form-group" style="flex:1;min-width:130px;"><label class="notion-label">Year</label><select name="year_id" class="notion-select"><option value="">All</option><?php foreach ($years as $y): ?><option value="<?= (int) $y['id'] ?>" <?= $yearFilter === (int) $y['id'] ? 'selected' : '' ?>><?= htmlspecialchars($y['year_name']) ?></option><?php endforeach; ?></select></div>
                     <button type="submit" class="notion-btn notion-btn-primary notion-btn-sm"><i class="fas fa-search"></i> Filter</button>
                     <a href="student_credentials" class="notion-btn notion-btn-ghost notion-btn-sm">Clear</a>
+                    <?php if ($studentFilter > 0): ?><a href="student_credentials" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-users"></i> Show All</a><?php endif; ?>
                 </form>
 
                 <div class="table-scroll"><table class="glass-table"><thead><tr><th>Student</th><th>Class</th><th>Year</th><th>Username</th><th>Password</th><th>Status</th><th>Actions</th></tr></thead><tbody>
@@ -183,6 +190,7 @@ $totals['missing'] = max(0, $totals['students'] - $totals['ready']);
                         <td><span class="badge <?= !empty($row['is_active']) ? 'badge-blue' : 'badge-pink' ?>"><?= !empty($row['is_active']) ? 'Active' : 'Disabled' ?></span></td>
                         <td>
                             <div class="table-actions">
+                                <button type="button" class="notion-btn notion-btn-ghost notion-btn-sm js-print-receipt" data-student-id="<?= (int) $row['id'] ?>"><i class="fas fa-print"></i> Print</button>
                                 <form method="POST" style="display:inline-flex;"><input type="hidden" name="action" value="reset_one"><input type="hidden" name="student_id" value="<?= (int) $row['id'] ?>"><button type="submit" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-rotate"></i> Reset</button></form>
                                 <form method="POST" style="display:inline-flex;"><input type="hidden" name="action" value="toggle_active"><input type="hidden" name="student_id" value="<?= (int) $row['id'] ?>"><input type="hidden" name="is_active" value="<?= empty($row['is_active']) ? 1 : 0 ?>"><button type="submit" class="notion-btn notion-btn-sm <?= empty($row['is_active']) ? 'notion-btn-primary' : 'notion-btn-danger' ?>"><i class="fas <?= empty($row['is_active']) ? 'fa-toggle-on' : 'fa-toggle-off' ?>"></i> <?= empty($row['is_active']) ? 'Enable' : 'Disable' ?></button></form>
                             </div>
@@ -196,7 +204,55 @@ $totals['missing'] = max(0, $totals['students'] - $totals['ready']);
     </div>
 </main>
 </div>
-<script>const sidebar=document.getElementById('sidebar');const sbOverlay=document.getElementById('sbOverlay');const sbToggle=document.getElementById('sbToggle');sbToggle?.addEventListener('click',()=>{sidebar.classList.toggle('open');sbOverlay.classList.toggle('show');});sbOverlay?.addEventListener('click',()=>{sidebar.classList.remove('open');sbOverlay.classList.remove('show');});</script>
+<div class="receipt-print-area" aria-hidden="true">
+    <?php foreach ($students as $row): ?>
+        <?php
+            $studentName = (string) ($row['student_name'] ?? '');
+            $className = (string) ($row['class_name'] ?? '-');
+            $yearName = (string) ($row['year_name'] ?? '-');
+            $username = (string) ($row['username'] ?? '');
+            $password = (string) ($row['password_plain'] ?? '');
+            $isReady = trim($username) !== '' && trim($password) !== '';
+        ?>
+        <article class="receipt-card" id="receipt-<?= (int) $row['id'] ?>" data-student-id="<?= (int) $row['id'] ?>">
+            <img src="../logo.png" alt="BrightVision" class="receipt-logo">
+            <div class="receipt-brand">BrightVision English Academy</div>
+            <div class="receipt-title">Student Login Credentials</div>
+            <div class="receipt-rule"></div>
+            <div class="receipt-row"><span>Name</span><strong><?= htmlspecialchars($studentName) ?></strong></div>
+            <div class="receipt-row"><span>Class</span><strong><?= htmlspecialchars($className) ?></strong></div>
+            <div class="receipt-row"><span>Year</span><strong><?= htmlspecialchars($yearName) ?></strong></div>
+            <div class="receipt-rule"></div>
+            <?php if ($isReady): ?>
+                <div class="receipt-credential"><span>Username</span><strong><?= htmlspecialchars($username) ?></strong></div>
+                <div class="receipt-credential"><span>Password</span><strong><?= htmlspecialchars($password) ?></strong></div>
+                <div class="receipt-status">Status: <?= !empty($row['is_active']) ? 'Active' : 'Disabled' ?></div>
+            <?php else: ?>
+                <div class="receipt-empty">Credentials not generated yet.</div>
+            <?php endif; ?>
+            <div class="receipt-rule"></div>
+            <div class="receipt-foot">Student Login Portal</div>
+        </article>
+    <?php endforeach; ?>
+</div>
+<script>
+const sidebar=document.getElementById('sidebar');
+const sbOverlay=document.getElementById('sbOverlay');
+const sbToggle=document.getElementById('sbToggle');
+const printButtons=document.querySelectorAll('.js-print-receipt');
+const printAllButtons=[document.getElementById('printVisibleReceipts'),document.getElementById('printVisibleReceiptsPanel')].filter(Boolean);
+const receipts=document.querySelectorAll('.receipt-card');
+const clearReceiptTargets=()=>{document.body.classList.remove('print-single-receipt');receipts.forEach((el)=>{el.classList.remove('is-print-target');el.hidden=false;});};
+const receiptPrintCss=`@page{size:80mm 90mm;margin:0}*{box-sizing:border-box}html,body{width:80mm;margin:0;padding:0;background:#fff;color:#111}.receipt-card{width:80mm;color:#111;background:#fff;font-family:Consolas,"Courier New",monospace;font-size:11px;line-height:1.3;padding:3mm 4mm 4mm}.receipt-card+.receipt-card{break-before:page;page-break-before:always}.receipt-logo{display:block;width:30mm;max-height:12mm;object-fit:contain;margin:0 auto 1.5mm}.receipt-brand{text-align:center;font-size:12px;font-weight:800;text-transform:uppercase}.receipt-title,.receipt-status,.receipt-foot,.receipt-empty{text-align:center}.receipt-title{margin-top:.7mm;font-size:11px;font-weight:700}.receipt-rule{border-top:1px dashed #111;margin:2mm 0}.receipt-row,.receipt-credential{display:grid;grid-template-columns:20mm 1fr;gap:2mm;margin:1mm 0}.receipt-row span,.receipt-credential span{color:#333}.receipt-row strong,.receipt-credential strong{min-width:0;overflow-wrap:anywhere;text-align:right}.receipt-credential{grid-template-columns:1fr;gap:.5mm;text-align:center}.receipt-credential strong{display:block;border:1px solid #111;padding:1.4mm 1mm;font-size:15px;letter-spacing:.04em;text-align:center}.receipt-status,.receipt-foot,.receipt-empty{font-size:10px}.receipt-empty{border:1px solid #111;padding:2mm 1mm;font-weight:700}`;
+const normalizeReceiptHtml=(cards)=>cards.map((card)=>{const clone=card.cloneNode(true);const logo=clone.querySelector('.receipt-logo');if(logo){logo.src=new URL('../logo.png',window.location.href).href;}clone.removeAttribute('hidden');clone.classList.remove('is-print-target');return clone.outerHTML;}).join('');
+const printReceiptHtml=(cards)=>{if(!cards.length){return;}const frame=document.createElement('iframe');frame.style.position='fixed';frame.style.right='0';frame.style.bottom='0';frame.style.width='0';frame.style.height='0';frame.style.border='0';frame.setAttribute('aria-hidden','true');document.body.appendChild(frame);const doc=frame.contentDocument||frame.contentWindow.document;doc.open();doc.write(`<!doctype html><html><head><meta charset="utf-8"><title>Student Credential Slip</title><style>${receiptPrintCss}</style></head><body>${normalizeReceiptHtml(cards)}</body></html>`);doc.close();const runPrint=()=>{const images=Array.from(doc.images);const ready=images.map((img)=>img.complete?Promise.resolve():new Promise((resolve)=>{img.onload=resolve;img.onerror=resolve;}));Promise.all(ready).then(()=>{setTimeout(()=>{frame.contentWindow.focus();frame.contentWindow.print();},80);});};frame.onload=runPrint;setTimeout(runPrint,250);const removeFrame=()=>setTimeout(()=>frame.remove(),500);frame.contentWindow.addEventListener('afterprint',removeFrame);};
+const printReceipt=(studentId)=>{clearReceiptTargets();const receipt=document.getElementById(`receipt-${studentId}`);if(!receipt){return;}printReceiptHtml([receipt]);};
+sbToggle?.addEventListener('click',()=>{sidebar.classList.toggle('open');sbOverlay.classList.toggle('show');});
+sbOverlay?.addEventListener('click',()=>{sidebar.classList.remove('open');sbOverlay.classList.remove('show');});
+printButtons.forEach((button)=>button.addEventListener('click',()=>printReceipt(button.dataset.studentId)));
+printAllButtons.forEach((button)=>button.addEventListener('click',()=>{clearReceiptTargets();printReceiptHtml(Array.from(receipts));}));
+window.addEventListener('afterprint',clearReceiptTargets);
+</script>
 </body>
 </html>
 

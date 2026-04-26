@@ -5,23 +5,41 @@ require_once 'admin_auth.php';
 
 require_admin_login($pdo);
 
+$has_percentage_column = false;
+try {
+    $columnCheck = $pdo->query("SHOW COLUMNS FROM marks LIKE 'percentage'");
+    $has_percentage_column = $columnCheck && (bool) $columnCheck->fetch();
+} catch (Throwable $e) {
+    $has_percentage_column = false;
+}
+
+$percentage_expr = $has_percentage_column
+    ? "CASE WHEN m.percentage IS NOT NULL THEN m.percentage WHEN m.max_marks > 0 THEN (m.marks_obtained / m.max_marks) * 100 ELSE 0 END"
+    : "CASE WHEN m.max_marks > 0 THEN (m.marks_obtained / m.max_marks) * 100 ELSE 0 END";
+
 $student_count = $pdo->query("SELECT COUNT(*) FROM students")->fetchColumn();
 $class_count = $pdo->query("SELECT COUNT(*) FROM classes")->fetchColumn();
 $year_count = $pdo->query("SELECT COUNT(*) FROM academic_years")->fetchColumn();
 $exam_count = $pdo->query("SELECT COUNT(DISTINCT exam_name) FROM marks")->fetchColumn();
 
 $top_students = $pdo->query("
-    SELECT s.name, c.class_name, SUM(m.marks_obtained) AS total_marks
+    SELECT
+        s.name,
+        c.class_name,
+        AVG($percentage_expr) AS avg_percentage
     FROM students s
     LEFT JOIN classes c ON s.class_id = c.id
     JOIN marks m ON s.id = m.student_id
     GROUP BY s.id
-    ORDER BY total_marks DESC
+    ORDER BY avg_percentage DESC
     LIMIT 5
 ")->fetchAll();
 
 $class_stats = $pdo->query("
-    SELECT c.class_name, IFNULL(m.exam_name, 'Term Exam') AS exam_name, AVG(m.marks_obtained) AS avg_marks
+    SELECT
+        c.class_name,
+        IFNULL(m.exam_name, 'Term Exam') AS exam_name,
+        AVG($percentage_expr) AS avg_percentage
     FROM classes c
     JOIN students s ON c.id = s.class_id
     JOIN marks m ON s.id = m.student_id
@@ -43,7 +61,7 @@ foreach ($class_stats as $stat) {
         $exam_series[$exam_name] = [];
     }
 
-    $exam_series[$exam_name][$class_name] = round((float) $stat['avg_marks'], 2);
+    $exam_series[$exam_name][$class_name] = round((float) $stat['avg_percentage'], 2);
 }
 
 $chart_datasets = [];
@@ -193,7 +211,7 @@ $recent = $pdo->query("
 
                     <article class="dash-panel">
                         <div class="panel-head">
-                            <h2><i class="fas fa-trophy" style="color:var(--accent);"></i> Top Students</h2>
+                            <h2><i class="fas fa-trophy" style="color:var(--accent);"></i> Top Students (Avg %)</h2>
                         </div>
                         <div class="panel-body">
                             <ul class="rank-list">
@@ -205,7 +223,7 @@ $recent = $pdo->query("
                                             <span class="r-name"><?= htmlspecialchars($student['name']) ?></span>
                                             <span class="r-cls"><?= htmlspecialchars($student['class_name'] ?? '-') ?></span>
                                         </div>
-                                        <div class="r-score"><?= number_format((float) $student['total_marks'], 1) ?></div>
+                                        <div class="r-score"><?= number_format((float) $student['avg_percentage'], 1) ?>%</div>
                                     </li>
                                 <?php endforeach; ?>
                             </ul>
