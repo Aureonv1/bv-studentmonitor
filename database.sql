@@ -10,6 +10,23 @@ USE `student_marks_portal`;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- Fresh restore safety: remove any partially imported or legacy tables first.
+-- Without this, CREATE TABLE IF NOT EXISTS can leave an old table definition in
+-- place and later foreign keys may fail against missing/incorrect indexes.
+DROP TABLE IF EXISTS `student_accounts`;
+DROP TABLE IF EXISTS `marks`;
+DROP TABLE IF EXISTS `imports_log`;
+DROP TABLE IF EXISTS `database_backups`;
+DROP TABLE IF EXISTS `exams`;
+DROP TABLE IF EXISTS `students`;
+DROP TABLE IF EXISTS `student_code_counter`;
+DROP TABLE IF EXISTS `subjects`;
+DROP TABLE IF EXISTS `classes`;
+DROP TABLE IF EXISTS `academic_years`;
+DROP TABLE IF EXISTS `site_settings`;
+DROP TABLE IF EXISTS `app_meta`;
+DROP TABLE IF EXISTS `admins`;
+
 CREATE TABLE IF NOT EXISTS `admins` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `username` VARCHAR(50) NOT NULL UNIQUE,
@@ -41,6 +58,12 @@ CREATE TABLE IF NOT EXISTS `site_settings` (
   `footer_link_2_url` VARCHAR(255) NOT NULL DEFAULT '#',
   `footer_link_3_label` VARCHAR(50) NOT NULL DEFAULT 'Contact',
   `footer_link_3_url` VARCHAR(255) NOT NULL DEFAULT '#',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `app_meta` (
+  `meta_key` VARCHAR(100) NOT NULL PRIMARY KEY,
+  `meta_value` VARCHAR(255) NOT NULL,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -268,7 +291,7 @@ INSERT INTO `admins` (
   `can_view_analytics`
 )
 VALUES (
-  'admin',
+  'rnsdev',
   'System Administrator',
   '$2y$10$i4NwEXIhertNmP5W2uV7vOpRgPDUCa5VRulEUeqn6fi9WYQGfUKU.',
   1,
@@ -337,5 +360,10 @@ ON DUPLICATE KEY UPDATE
   `footer_link_2_url` = COALESCE(NULLIF(`footer_link_2_url`, ''), VALUES(`footer_link_2_url`)),
   `footer_link_3_label` = COALESCE(NULLIF(`footer_link_3_label`, ''), VALUES(`footer_link_3_label`)),
   `footer_link_3_url` = COALESCE(NULLIF(`footer_link_3_url`, ''), VALUES(`footer_link_3_url`));
+
+INSERT INTO `app_meta` (`meta_key`, `meta_value`)
+VALUES ('schema_version', '2026.04.22.01')
+ON DUPLICATE KEY UPDATE
+  `meta_value` = VALUES(`meta_value`);
 
 SET FOREIGN_KEY_CHECKS = 1;

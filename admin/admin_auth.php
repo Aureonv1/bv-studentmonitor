@@ -24,9 +24,40 @@ if (!function_exists('admin_url')) {
     }
 }
 
+if (!defined('SUPER_ADMIN_USERNAME')) {
+    define('SUPER_ADMIN_USERNAME', 'rnsdev');
+}
+
+if (!function_exists('is_super_admin_username')) {
+    function is_super_admin_username(string $username): bool
+    {
+        return strtolower(trim($username)) === SUPER_ADMIN_USERNAME;
+    }
+}
+
+if (!function_exists('current_admin_is_super_admin')) {
+    function current_admin_is_super_admin(): bool
+    {
+        return is_super_admin_username((string) ($_SESSION['admin_username'] ?? ''));
+    }
+}
+
 if (!function_exists('admin_permissions_from_row')) {
     function admin_permissions_from_row(array $row): array
     {
+        if (is_super_admin_username((string) ($row['username'] ?? ''))) {
+            return [
+                'manage_students' => true,
+                'manage_marks' => true,
+                'import_csv' => true,
+                'backup_db' => true,
+                'maintenance_mode' => true,
+                'manage_admins' => true,
+                'manage_site_settings' => true,
+                'view_analytics' => true,
+            ];
+        }
+
         return [
             'manage_students' => !empty($row['can_manage_students']),
             'manage_marks' => !empty($row['can_manage_marks']),

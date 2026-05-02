@@ -94,13 +94,19 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
             $fullName = trim((string) ($_POST['full_name'] ?? ''));
             $isActive = !empty($_POST['is_active']) ? 1 : 0;
+            $isSuperAdmin = is_super_admin_username((string) $target['username']);
 
             $permissionValues = [];
             foreach (array_keys($allPermissions) as $column) {
                 $permissionValues[$column] = !empty($_POST[$column]) ? 1 : 0;
             }
 
-            if ($adminId === (int) ($_SESSION['admin_id'] ?? 0)) {
+            if ($isSuperAdmin) {
+                foreach (array_keys($allPermissions) as $column) {
+                    $permissionValues[$column] = 1;
+                }
+                $isActive = 1;
+            } elseif ($adminId === (int) ($_SESSION['admin_id'] ?? 0)) {
                 $permissionValues['can_manage_admins'] = 1;
                 $isActive = 1;
             }
@@ -151,6 +157,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             }
             if ($adminId === $currentAdminId) {
                 throw new RuntimeException('You cannot delete your own account.');
+            }
+
+            $stmtTarget = $pdo->prepare('SELECT username FROM admins WHERE id = ? LIMIT 1');
+            $stmtTarget->execute([$adminId]);
+            if (is_super_admin_username((string) $stmtTarget->fetchColumn())) {
+                throw new RuntimeException('The super admin account cannot be deleted.');
             }
 
             $remaining = (int) $pdo->query('SELECT COUNT(*) FROM admins')->fetchColumn();
@@ -465,6 +477,7 @@ foreach ($admins as $adm) {
                 <?php if (admin_can('manage_site_settings')): ?><a href="site_settings" class="sb-link"><i class="fas fa-sliders"></i> Site Settings</a><?php endif; ?>
                 <?php if (admin_can('backup_db')): ?><a href="backup_database" class="sb-link"><i class="fas fa-download"></i> Backup Database</a><?php endif; ?>
                 <?php if (admin_can('maintenance_mode')): ?><a href="maintenance" class="sb-link"><i class="fas fa-screwdriver-wrench"></i> Maintenance Mode</a><?php endif; ?>
+                <a href="profile" class="sb-link"><i class="fas fa-user-gear"></i> My Profile</a>
                 <a href="../student_login" target="_blank" class="sb-link"><i class="fas fa-user-graduate"></i> Student Login</a>
                 <a href="logout" class="sb-link" style="color:var(--danger);"><i class="fas fa-right-from-bracket"></i> Log out</a>
             </nav>
@@ -553,11 +566,15 @@ foreach ($admins as $adm) {
                         <?php if (!empty($admins)): ?>
                             <div class="admin-card-grid">
                                 <?php foreach ($admins as $row): ?>
+                                    <?php $isSuperAdminRow = is_super_admin_username((string) $row['username']); ?>
                                     <article class="admin-user-card">
                                         <div class="admin-user-top">
                                             <div class="admin-identity">
                                                 <strong><?= htmlspecialchars((string) ($row['full_name'] ?: $row['username'])) ?></strong>
                                                 <span class="text-muted">@<?= htmlspecialchars((string) $row['username']) ?></span>
+                                                <?php if ($isSuperAdminRow): ?>
+                                                    <span class="meta-chip"><i class="fas fa-crown"></i> Super Admin</span>
+                                                <?php endif; ?>
                                             </div>
                                             <div class="admin-user-meta">
                                                 <span class="meta-chip">#<?= (int) $row['id'] ?></span>
@@ -580,10 +597,10 @@ foreach ($admins as $adm) {
                                                     <?php endif; ?>
                                                 <?php endforeach; ?>
                                                 <label class="status-switch">
-                                                    <input type="checkbox" name="is_active" value="1" <?= !empty($row['is_active']) ? 'checked' : '' ?>>
+                                                    <input type="checkbox" name="is_active" value="1" <?= !empty($row['is_active']) ? 'checked' : '' ?> <?= $isSuperAdminRow ? 'disabled' : '' ?>>
                                                     Enabled Access
                                                 </label>
-                                                <button type="submit" class="notion-btn notion-btn-ghost notion-btn-sm">Apply</button>
+                                                <button type="submit" class="notion-btn notion-btn-ghost notion-btn-sm" <?= $isSuperAdminRow ? 'disabled' : '' ?>>Apply</button>
                                             </form>
                                         </div>
 
@@ -597,12 +614,15 @@ foreach ($admins as $adm) {
                                                 <div class="perm-editor-grid">
                                                     <?php foreach ($allPermissions as $column => $label): ?>
                                                         <label>
-                                                            <input type="checkbox" name="<?= htmlspecialchars($column) ?>" value="1" <?= !empty($row[$column]) ? 'checked' : '' ?>>
+                                                            <input type="checkbox" name="<?= htmlspecialchars($column) ?>" value="1" <?= !empty($row[$column]) ? 'checked' : '' ?> <?= $isSuperAdminRow ? 'disabled' : '' ?>>
+                                                            <?php if ($isSuperAdminRow): ?>
+                                                                <input type="hidden" name="<?= htmlspecialchars($column) ?>" value="1">
+                                                            <?php endif; ?>
                                                             <?= htmlspecialchars($label) ?>
                                                         </label>
                                                     <?php endforeach; ?>
                                                 </div>
-                                                <button type="submit" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-floppy-disk"></i> Save Permissions</button>
+                                                <button type="submit" class="notion-btn notion-btn-ghost notion-btn-sm" <?= $isSuperAdminRow ? 'disabled' : '' ?>><i class="fas fa-floppy-disk"></i> Save Permissions</button>
                                             </form>
                                         </div>
 
@@ -624,7 +644,7 @@ foreach ($admins as $adm) {
                                             <form method="POST" onsubmit="return confirm('Delete this admin account?');">
                                                 <input type="hidden" name="action" value="delete_admin">
                                                 <input type="hidden" name="admin_id" value="<?= (int) $row['id'] ?>">
-                                                <button type="submit" class="notion-btn notion-btn-danger notion-btn-sm" <?= ((int) $row['id'] === (int) ($_SESSION['admin_id'] ?? 0)) ? 'disabled' : '' ?>>
+                                                <button type="submit" class="notion-btn notion-btn-danger notion-btn-sm" <?= (((int) $row['id'] === (int) ($_SESSION['admin_id'] ?? 0)) || $isSuperAdminRow) ? 'disabled' : '' ?>>
                                                     <i class="fas fa-trash"></i> Delete Account
                                                 </button>
                                             </form>

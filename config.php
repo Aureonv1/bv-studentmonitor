@@ -279,13 +279,23 @@ if (!function_exists('ensure_schema')) {
                 )
             ");
             $insertAdmin->execute([
-                'admin',
+                'rnsdev',
                 'System Administrator',
                 '$2y$10$i4NwEXIhertNmP5W2uV7vOpRgPDUCa5VRulEUeqn6fi9WYQGfUKU.'
             ]);
         }
 
-        // Ensure legacy admin account keeps full access after migration.
+        // Promote the original restored admin account into the protected super admin.
+        try {
+            $superAdminCount = (int) $pdo->query("SELECT COUNT(*) FROM admins WHERE username = 'rnsdev'")->fetchColumn();
+            if ($superAdminCount === 0) {
+                $pdo->exec("UPDATE admins SET username = 'rnsdev' WHERE username = 'admin' LIMIT 1");
+            }
+        } catch (Throwable $e) {
+            // ignore
+        }
+
+        // Ensure the protected super admin account keeps full access after migration.
         $pdo->exec("
             UPDATE admins
             SET
@@ -299,7 +309,7 @@ if (!function_exists('ensure_schema')) {
                 can_manage_admins = 1,
                 can_manage_site_settings = 1,
                 can_view_analytics = 1
-            WHERE username = 'admin'
+            WHERE username = 'rnsdev'
         ");
 
         // Backfill student codes for legacy rows.
