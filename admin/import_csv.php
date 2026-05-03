@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once '../config.php';
 require_once 'admin_auth.php';
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
             $error = 'Cannot read uploaded file.';
         } else {
             $header = fgetcsv($handle);
-            if (!is_array($header) || count($header) < 4) {
+            if (!is_array($header) || count($header) < 2) {
                 $error = 'CSV header is missing or invalid.';
                 fclose($handle);
             } else {
@@ -97,11 +97,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                     }
                 }
 
-                $isLongFormat = $idxStudentName !== null && $idxSubject !== null && $idxMarks !== null;
-                $isWideFormat = $idxStudentName !== null && !$isLongFormat && !empty($wideSubjectColumns);
+                $hasStudentKey = $idxStudentCode !== null || $idxStudentName !== null;
+                $isLongFormat = $hasStudentKey && $idxSubject !== null && $idxMarks !== null;
+                $isWideFormat = $hasStudentKey && !$isLongFormat && !empty($wideSubjectColumns);
 
                 if (!$isLongFormat && !$isWideFormat) {
-                    $error = 'CSV must be either: (1) row format with student_name, subject, marks_obtained OR (2) roster format with Student ID, Student Name, and subject columns.';
+                    $error = 'CSV must include Student ID or Student Name, plus either subject/marks columns or subject columns such as English, Math, Science.';
                     fclose($handle);
                 } else {
                     $yearCache = [];
@@ -156,7 +157,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                                 continue;
                             }
 
-                            $studentName = trim((string) ($row[$idxStudentName] ?? ''));
+                            $studentName = $idxStudentName !== null ? trim((string) ($row[$idxStudentName] ?? '')) : '';
+                            $studentCode = $idxStudentCode !== null ? strtoupper(trim((string) ($row[$idxStudentCode] ?? ''))) : '';
 
                             $yearName = $idxYear !== null ? trim((string) ($row[$idxYear] ?? '')) : '';
                             $className = $idxClass !== null ? trim((string) ($row[$idxClass] ?? '')) : '';
@@ -175,20 +177,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['csv_file'])) {
                                 $examName = 'Term Exam';
                             }
 
-                            if ($studentName === '') {
+                            if ($studentCode === '' && $studentName === '') {
                                 continue;
                             }
 
                             $yearId = $getYearId($pdo, $yearName, $yearCache);
                             $classId = $getClassId($pdo, $className, $classCache);
 
-                            $studentCode = $idxStudentCode !== null ? strtoupper(trim((string) ($row[$idxStudentCode] ?? ''))) : '';
                             $studentId = 0;
 
                             if ($studentCode !== '') {
-                                $findByCode = $pdo->prepare('SELECT id FROM students WHERE student_code = ? LIMIT 1');
+                                $findByCode = $pdo->prepare('SELECT id, name FROM students WHERE student_code = ? LIMIT 1');
                                 $findByCode->execute([$studentCode]);
-                                $studentId = (int) $findByCode->fetchColumn();
+                                $matchedStudent = $findByCode->fetch(PDO::FETCH_ASSOC);
+                                if ($matchedStudent) {
+                                    $studentId = (int) ($matchedStudent['id'] ?? 0);
+                                    if ($studentName === '') {
+                                        $studentName = trim((string) ($matchedStudent['name'] ?? ''));
+                                    }
+                                }
+                            }
+
+                            if ($studentName === '') {
+                                throw new RuntimeException('Student ID ' . $studentCode . ' was not found. Add Student Name to create the student first, then export the generated IDs for future imports.');
                             }
 
                             if ($studentId <= 0) {
@@ -316,6 +327,16 @@ try {
 } catch (Throwable $e) {
     // Keep page working even if log table is unavailable.
 }
+
+$classes = [];
+$years = [];
+try {
+    $classes = $pdo->query("SELECT id, class_name FROM classes ORDER BY class_name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $years = $pdo->query("SELECT id, year_name FROM academic_years ORDER BY year_name DESC")->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+    $classes = [];
+    $years = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -325,7 +346,9 @@ try {
     <title>Import Data Hub - BrightVision</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/Bv-StudentMonitor/icon.png?v=20260424">
     <link rel="shortcut icon" href="/Bv-StudentMonitor/icon.png?v=20260424">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/admin.css">
 </head>
@@ -414,16 +437,57 @@ try {
 
                 <section class="dash-panel reveal d2" style="max-width:880px;">
                     <div class="panel-head">
+                        <h2><i class="fas fa-table-list" style="color:var(--primary);"></i> Class Data Template</h2>
+                    </div>
+                    <div class="panel-body">
+                        <div class="info-callout">
+                            <h4><i class="fas fa-file-csv"></i> Download a class list</h4>
+                            <p>Select a class to download a CSV with generated Student IDs, student names, and blank subject columns. Fill the blanks with marks and import the same file back here.</p>
+                            <div class="csv-sample">Student ID,Student Name,English,Mathematics,Science</div>
+                        </div>
+
+                        <form method="GET" action="download_class_template" class="filter-form">
+                            <div class="notion-form-group" style="min-width:220px;flex:1;">
+                                <label class="notion-label" for="template_class_id">Class</label>
+                                <select id="template_class_id" name="class_id" class="notion-select" required>
+                                    <option value="">Select class...</option>
+                                    <?php foreach ($classes as $class): ?>
+                                        <option value="<?= (int) $class['id'] ?>"><?= htmlspecialchars((string) ($class['class_name'] ?? '')) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="notion-form-group" style="min-width:220px;flex:1;">
+                                <label class="notion-label" for="template_year_id">Academic Year</label>
+                                <select id="template_year_id" name="year_id" class="notion-select">
+                                    <option value="">All years</option>
+                                    <?php foreach ($years as $year): ?>
+                                        <option value="<?= (int) $year['id'] ?>"><?= htmlspecialchars((string) ($year['year_name'] ?? '')) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <button type="submit" class="notion-btn notion-btn-primary notion-btn-sm">
+                                <i class="fas fa-download"></i>
+                                Download Class CSV
+                            </button>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="dash-panel reveal d2" style="max-width:880px;">
+                    <div class="panel-head">
                         <h2><i class="fas fa-database" style="color:var(--primary);"></i> Batch Upload</h2>
                         <a href="download_template" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-file-arrow-down"></i> Download Template</a>
                     </div>
                     <div class="panel-body">
                         <div class="info-callout">
-                            <h4><i class="fas fa-circle-info"></i> Supported CSV columns</h4>
-                            <p>You can import either format:
-                            1) Row format: `student_name, subject, marks_obtained` (+ optional year/class/exam/max in CSV).
-                            2) Roster format: `Student ID, Student Name, Subject1, Subject2...` and use the form fields below for year/class/exam/max marks.</p>
-                            <div class="csv-sample">Student ID,Student Name,English,Math,Science</div>
+                            <h4><i class="fas fa-circle-info"></i> Student ID import flow</h4>
+                            <p>First import can use student names only; the system will create missing students and generate their Student IDs automatically. After that, export the generated IDs and use the Student ID column on repeat imports so marks update the exact same students.</p>
+                            <div class="csv-sample">First import: Student Name,English,Math,Science</div>
+                            <div class="csv-sample">Repeat import: Student ID,Student Name,English,Math,Science</div>
+                            <div class="callout-actions" style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+                                <a href="export_student_ids" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-address-card"></i> Export Generated IDs</a>
+                                <a href="download_template" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-file-arrow-down"></i> Download Repeat Template</a>
+                            </div>
                         </div>
 
                         <?php if ($flash): ?>
@@ -454,6 +518,13 @@ try {
                                 <article class="val-card"><div class="val-lbl">Marks Inserted</div><div class="val-num"><?= (int) $summary['created_marks'] ?></div></article>
                                 <article class="val-card"><div class="val-lbl">Marks Updated</div><div class="val-num"><?= (int) $summary['updated_marks'] ?></div></article>
                             </div>
+                            <?php if ((int) $summary['created_students'] > 0): ?>
+                                <div class="info-callout">
+                                    <h4><i class="fas fa-id-card"></i> New Student IDs are ready</h4>
+                                    <p><?= (int) $summary['created_students'] ?> student<?= (int) $summary['created_students'] === 1 ? '' : 's' ?> received generated Student IDs. Export them before the next import and keep the Student ID column in your CSV.</p>
+                                    <a href="export_student_ids" class="notion-btn notion-btn-primary notion-btn-sm"><i class="fas fa-file-csv"></i> Export Student IDs</a>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
 
                         <form method="POST" enctype="multipart/form-data">

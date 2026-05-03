@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 require_once '../config.php';
 require_once 'admin_auth.php';
@@ -238,7 +238,9 @@ foreach ($admins as $adm) {
     <title>Manage Admins - BrightVision</title>
     <link rel="icon" type="image/png" sizes="32x32" href="/Bv-StudentMonitor/icon.png?v=20260424">
     <link rel="shortcut icon" href="/Bv-StudentMonitor/icon.png?v=20260424">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/admin.css">
     <style>

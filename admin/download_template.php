@@ -28,8 +28,8 @@ header('Expires: 0');
 $output = fopen('php://output', 'w');
 fputcsv($output, array_merge(['Student ID', 'Student Name'], $subjects));
 
-$sampleRow1 = ['STU000001', 'Alex Johnson'];
-$sampleRow2 = ['STU000002', 'Emily Davis'];
+$sampleRow1 = ['', 'Alex Johnson'];
+$sampleRow2 = ['', 'Emily Davis'];
 for ($i = 0; $i < count($subjects); $i++) {
     $sampleRow1[] = '';
     $sampleRow2[] = '';
