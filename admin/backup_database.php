@@ -8,8 +8,217 @@ require_admin_permission('backup_db');
 
 $flash = null;
 
+if (!function_exists('backup_identifier')) {
+    function backup_identifier(string $identifier): string
+    {
+        return '`' . str_replace('`', '``', $identifier) . '`';
+    }
+}
+
+if (!function_exists('backup_sql_value')) {
+    function backup_sql_value(PDO $pdo, mixed $value): string
+    {
+        if ($value === null) {
+            return 'NULL';
+        }
+
+        return $pdo->quote((string) $value);
+    }
+}
+
+if (!function_exists('backup_order_tables')) {
+    function backup_order_tables(array $tables): array
+    {
+        $preferredOrder = [
+            'admins',
+            'site_settings',
+            'app_meta',
+            'academic_years',
+            'classes',
+            'exams',
+            'subjects',
+            'students',
+            'student_code_counter',
+            'student_accounts',
+            'marks',
+            'imports_log',
+            'database_backups',
+            'admin_security_codes'
+        ];
+        $orderIndex = array_flip($preferredOrder);
+        usort($tables, static function (array $a, array $b) use ($orderIndex): int {
+            $tableA = (string) ($a[0] ?? '');
+            $tableB = (string) ($b[0] ?? '');
+            $rankA = $orderIndex[$tableA] ?? PHP_INT_MAX;
+            $rankB = $orderIndex[$tableB] ?? PHP_INT_MAX;
+
+            if ($rankA === $rankB) {
+                return strnatcasecmp($tableA, $tableB);
+            }
+
+            return $rankA <=> $rankB;
+        });
+
+        return $tables;
+    }
+}
+
+if (!function_exists('stream_table_rows')) {
+    function stream_table_rows(PDO $pdo, string $tableName, string $headerPrefix = 'Records for'): void
+    {
+        $safeTable = backup_identifier($tableName);
+        $rowStmt = $pdo->query('SELECT * FROM ' . $safeTable);
+        $columns = [];
+        for ($i = 0; $i < $rowStmt->columnCount(); $i++) {
+            $meta = $rowStmt->getColumnMeta($i);
+            $columns[] = (string) ($meta['name'] ?? ('column_' . $i));
+        }
+
+        if (empty($columns)) {
+            return;
+        }
+
+        $wroteHeader = false;
+        $columnSql = implode(', ', array_map('backup_identifier', $columns));
+        while ($row = $rowStmt->fetch(PDO::FETCH_ASSOC)) {
+            if (!$wroteHeader) {
+                echo "-- ----------------------------\n";
+                echo "-- {$headerPrefix} {$tableName}\n";
+                echo "-- ----------------------------\n";
+                $wroteHeader = true;
+            }
+
+            $values = [];
+            foreach ($columns as $column) {
+                $values[] = backup_sql_value($pdo, $row[$column] ?? null);
+            }
+            echo 'INSERT INTO ' . $safeTable . ' (' . $columnSql . ') VALUES (' . implode(', ', $values) . ");\n";
+        }
+
+        if ($wroteHeader) {
+            echo "\n";
+        }
+    }
+}
+
+if (!function_exists('stream_current_data_section')) {
+    function stream_current_data_section(PDO $pdo): void
+    {
+        $tables = backup_order_tables($pdo->query("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'")->fetchAll(PDO::FETCH_NUM));
+        $tableNames = array_values(array_filter(array_map(static fn(array $table): string => (string) ($table[0] ?? ''), $tables)));
+
+        echo "\n\n-- ============================================================\n";
+        echo "-- Current live data snapshot\n";
+        echo "-- This section replaces installer seed rows with the data that\n";
+        echo "-- existed when the backup was downloaded.\n";
+        echo "-- ============================================================\n\n";
+        echo "SET FOREIGN_KEY_CHECKS = 0;\n\n";
+
+        foreach (array_reverse($tableNames) as $tableName) {
+            echo 'DELETE FROM ' . backup_identifier($tableName) . ";\n";
+        }
+        echo "\n";
+
+        foreach ($tableNames as $tableName) {
+            stream_table_rows($pdo, $tableName, 'Current records for');
+        }
+
+        echo "SET FOREIGN_KEY_CHECKS = 1;\n";
+    }
+}
+
+if (!function_exists('stream_database_backup')) {
+    function stream_database_backup(PDO $pdo, string $databaseName): void
+    {
+        @set_time_limit(0);
+        ignore_user_abort(true);
+
+        $safeDatabase = backup_identifier($databaseName);
+        $tables = backup_order_tables($pdo->query("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'")->fetchAll(PDO::FETCH_NUM));
+        $views = $pdo->query("SHOW FULL TABLES WHERE Table_type = 'VIEW'")->fetchAll(PDO::FETCH_NUM);
+
+        echo "-- BrightVision Student Monitor SQL Backup\n";
+        echo "-- Database: {$databaseName}\n";
+        echo "-- Generated at: " . date('Y-m-d H:i:s') . "\n\n";
+        echo "SET SQL_MODE = \"NO_AUTO_VALUE_ON_ZERO\";\n";
+        echo "SET time_zone = \"+00:00\";\n";
+        echo "SET NAMES utf8mb4;\n";
+        echo "SET FOREIGN_KEY_CHECKS = 0;\n\n";
+        echo "CREATE DATABASE IF NOT EXISTS {$safeDatabase} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;\n";
+        echo "USE {$safeDatabase};\n\n";
+
+        foreach ($tables as $tableInfo) {
+            $tableName = (string) ($tableInfo[0] ?? '');
+            if ($tableName === '') {
+                continue;
+            }
+
+            $safeTable = backup_identifier($tableName);
+            $createStmt = $pdo->query('SHOW CREATE TABLE ' . $safeTable)->fetch(PDO::FETCH_ASSOC);
+            $createSql = (string) ($createStmt['Create Table'] ?? '');
+
+            echo "-- ----------------------------\n";
+            echo "-- Table structure for {$tableName}\n";
+            echo "-- ----------------------------\n";
+            echo "DROP TABLE IF EXISTS {$safeTable};\n";
+            echo $createSql . ";\n\n";
+
+            stream_table_rows($pdo, $tableName);
+        }
+
+        if (!empty($views)) {
+            foreach ($views as $viewInfo) {
+                $viewName = (string) ($viewInfo[0] ?? '');
+                if ($viewName === '') {
+                    continue;
+                }
+
+                $safeView = backup_identifier($viewName);
+                $createStmt = $pdo->query('SHOW CREATE VIEW ' . $safeView)->fetch(PDO::FETCH_ASSOC);
+                $createSql = (string) ($createStmt['Create View'] ?? '');
+                if ($createSql === '') {
+                    continue;
+                }
+
+                echo "-- ----------------------------\n";
+                echo "-- View structure for {$viewName}\n";
+                echo "-- ----------------------------\n";
+                echo "DROP VIEW IF EXISTS {$safeView};\n";
+                echo $createSql . ";\n\n";
+            }
+        }
+
+        echo "SET FOREIGN_KEY_CHECKS = 1;\n";
+    }
+}
+
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['action'] ?? '') === 'download_original_schema') {
+    try {
+        $schemaPath = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'database.sql';
+        if (!is_file($schemaPath) || !is_readable($schemaPath)) {
+            throw new RuntimeException('The original database.sql file could not be found.');
+        }
+
+        $filename = 'brightvision_original_with_data_' . date('Ymd_His') . '.sql';
+        header('Content-Type: application/sql; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        readfile($schemaPath);
+        stream_current_data_section($pdo);
+        exit;
+    } catch (Throwable $e) {
+        $flash = [
+            'type' => 'error',
+            'text' => 'Original database download failed: ' . $e->getMessage()
+        ];
+    }
+}
+
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['action'] ?? '') === 'download_backup') {
     try {
+        global $db_name;
+
         $filename = 'brightvision_backup_' . date('Ymd_His') . '.sql';
         try {
             $adminId = (int) ($_SESSION['admin_id'] ?? 0);
@@ -23,50 +232,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['action'] ?? '') ==
         header('Pragma: no-cache');
         header('Expires: 0');
 
-        echo "-- BrightVision Student Monitor SQL Backup\n";
-        echo "-- Generated at: " . date('Y-m-d H:i:s') . "\n\n";
-        echo "SET SQL_MODE = \"NO_AUTO_VALUE_ON_ZERO\";\n";
-        echo "SET time_zone = \"+00:00\";\n\n";
-
-        $tables = $pdo->query('SHOW TABLES')->fetchAll(PDO::FETCH_COLUMN);
-
-        foreach ($tables as $table) {
-            $tableName = (string) $table;
-            $safeTable = '`' . str_replace('`', '``', $tableName) . '`';
-
-            $createStmt = $pdo->query('SHOW CREATE TABLE ' . $safeTable)->fetch(PDO::FETCH_ASSOC);
-            $createSql = $createStmt['Create Table'] ?? '';
-
-            echo "-- ----------------------------\n";
-            echo "-- Table structure for {$tableName}\n";
-            echo "-- ----------------------------\n";
-            echo "DROP TABLE IF EXISTS {$safeTable};\n";
-            echo $createSql . ";\n\n";
-
-            $rows = $pdo->query('SELECT * FROM ' . $safeTable)->fetchAll(PDO::FETCH_ASSOC);
-            if (!empty($rows)) {
-                echo "-- ----------------------------\n";
-                echo "-- Records for {$tableName}\n";
-                echo "-- ----------------------------\n";
-
-                $columns = array_keys($rows[0]);
-                $columnSql = '`' . implode('`,`', array_map(static fn($c) => str_replace('`', '``', (string) $c), $columns)) . '`';
-
-                foreach ($rows as $row) {
-                    $values = [];
-                    foreach ($columns as $column) {
-                        $value = $row[$column] ?? null;
-                        if ($value === null) {
-                            $values[] = 'NULL';
-                        } else {
-                            $values[] = $pdo->quote((string) $value);
-                        }
-                    }
-                    echo 'INSERT INTO ' . $safeTable . ' (' . $columnSql . ') VALUES (' . implode(',', $values) . ");\n";
-                }
-                echo "\n";
-            }
-        }
+        stream_database_backup($pdo, (string) $db_name);
         exit;
     } catch (Throwable $e) {
         $flash = [
@@ -137,13 +303,19 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && ($_POST['action'] ?? '') ==
                 <?php endif; ?>
 
                 <section class="dash-panel reveal d1">
-                    <div class="panel-head"><h2><i class="fas fa-database" style="color:var(--primary);"></i> Download Full SQL Backup</h2></div>
+                    <div class="panel-head"><h2><i class="fas fa-database" style="color:var(--primary);"></i> Download Database SQL</h2></div>
                     <div class="panel-body">
-                        <p class="maintenance-note" style="margin-bottom:0.9rem;">This exports all schema and data from the current BrightVision database in one `.sql` file.</p>
-                        <form method="POST">
-                            <input type="hidden" name="action" value="download_backup">
-                            <button type="submit" class="notion-btn notion-btn-primary"><i class="fas fa-download"></i> Download Backup</button>
-                        </form>
+                        <p class="maintenance-note" style="margin-bottom:0.9rem;">Both options include the current database data. The installer-style option keeps the original database.sql setup script and appends a live data snapshot.</p>
+                        <div class="backup-actions">
+                            <form method="POST">
+                                <input type="hidden" name="action" value="download_backup">
+                                <button type="submit" class="notion-btn notion-btn-primary"><i class="fas fa-download"></i> Current Database Backup</button>
+                            </form>
+                            <form method="POST">
+                                <input type="hidden" name="action" value="download_original_schema">
+                                <button type="submit" class="notion-btn notion-btn-ghost"><i class="fas fa-file-code"></i> Original Style + Data</button>
+                            </form>
+                        </div>
                     </div>
                 </section>
             </div>

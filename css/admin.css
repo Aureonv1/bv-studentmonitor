@@ -912,6 +912,16 @@
     font-size: 1rem;
 }
 
+.backup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.backup-actions form {
+    margin: 0;
+}
+
 /* Import page helpers */
 .info-callout {
     border: 1px solid rgba(13, 79, 158, 0.24);
