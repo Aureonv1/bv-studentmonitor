@@ -47,13 +47,13 @@ $db_name = getenv('DB_NAME') ?: 'student_marks_portal';
 
 // Admin security-code email settings.
 // For Gmail, use a Google App Password, not your normal Gmail password.
-$smtp_host = getenv('BV_SMTP_HOST') ?: 'smtp.gmail.com';
-$smtp_port = (int) (getenv('BV_SMTP_PORT') ?: 465);
-$smtp_secure = getenv('BV_SMTP_SECURE') ?: 'ssl'; // ssl or tls
-$smtp_username = getenv('BV_SMTP_USERNAME') ?: '';
-$smtp_password = getenv('BV_SMTP_PASSWORD') ?: '';
-$smtp_from_email = getenv('BV_SMTP_FROM_EMAIL') ?: $smtp_username;
-$smtp_from_name = getenv('BV_SMTP_FROM_NAME') ?: 'BrightVision Security';
+$smtp_host = 'mail.brightvision.lk';
+$smtp_port = '465';
+$smtp_secure = 'ssl'; // ssl or tls
+$smtp_username = 'security@brightvision.lk';
+$smtp_password = 'UxZ1VK6h;Tk}';
+$smtp_from_email = 'security@brightvision.lk';
+$smtp_from_name = 'BrightVision Security';
 
 if (!function_exists('create_pdo_connection')) {
     function create_pdo_connection(string $dsn, string $user, string $pass): PDO

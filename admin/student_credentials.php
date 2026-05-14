@@ -36,7 +36,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $setFlash('error', $e->getMessage());
     }
 
-    header('Location: student_credentials');
+    header('Location: student_credentials.php');
     exit;
 }
 
@@ -124,19 +124,19 @@ $totals['missing'] = max(0, $totals['students'] - $totals['ready']);
 <div class="bg-mesh"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
 <div class="admin-layout">
 <aside class="sidebar" id="sidebar">
-    <a href="dashboard" class="sb-header"><img src="../logo.png" alt="BrightVision" class="sb-logo"></a>
+    <a href="dashboard.php" class="sb-header"><img src="../logo.png" alt="BrightVision" class="sb-logo"></a>
     <nav class="sb-nav">
-        <div class="sb-label">Analytics</div><a href="dashboard" class="sb-link"><i class="fas fa-chart-line"></i> Dashboard</a><?php if (admin_can('view_analytics')): ?><a href="class_analytics" class="sb-link"><i class="fas fa-chart-column"></i> Class Analytics</a><?php endif; ?>
-        <div class="sb-label">Management</div><a href="manage_students" class="sb-link"><i class="fas fa-database"></i> Data Manager</a><a href="student_credentials" class="sb-link active"><i class="fas fa-id-card"></i> Student Credentials</a><a href="manage_academics" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
-                    <a href="export_student_ids" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
-        <?php if (admin_can('manage_marks')): ?><a href="manage_marks" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a><?php endif; ?>
-        <?php if (admin_can('import_csv')): ?><a href="import_csv" class="sb-link"><i class="fas fa-upload"></i> Import Marks</a><?php endif; ?>
+        <div class="sb-label">Analytics</div><a href="dashboard.php" class="sb-link"><i class="fas fa-chart-line"></i> Dashboard</a><?php if (admin_can('view_analytics')): ?><a href="class_analytics.php" class="sb-link"><i class="fas fa-chart-column"></i> Class Analytics</a><?php endif; ?>
+        <div class="sb-label">Management</div><a href="manage_students.php" class="sb-link"><i class="fas fa-database"></i> Data Manager</a><a href="student_credentials.php" class="sb-link active"><i class="fas fa-id-card"></i> Student Credentials</a><a href="manage_academics.php" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
+                    <a href="export_student_ids.php" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
+        <?php if (admin_can('manage_marks')): ?><a href="manage_marks.php" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a><?php endif; ?>
+        <?php if (admin_can('import_csv')): ?><a href="import_csv.php" class="sb-link"><i class="fas fa-upload"></i> Import Marks</a><?php endif; ?>
         <div class="sb-label">System</div>
-        <?php if (admin_can('manage_admins')): ?><a href="manage_admins" class="sb-link"><i class="fas fa-user-shield"></i> Manage Admins</a><?php endif; ?>
-        <?php if (admin_can('manage_site_settings')): ?><a href="site_settings" class="sb-link"><i class="fas fa-sliders"></i> Site Settings</a><?php endif; ?>
-        <?php if (admin_can('backup_db')): ?><a href="backup_database" class="sb-link"><i class="fas fa-download"></i> Backup Database</a><?php endif; ?>
-        <?php if (admin_can('maintenance_mode')): ?><a href="maintenance" class="sb-link"><i class="fas fa-screwdriver-wrench"></i> Maintenance Mode</a><?php endif; ?>
-        <a href="profile" class="sb-link"><i class="fas fa-user-gear"></i> My Profile</a><a href="../student_login" target="_blank" class="sb-link"><i class="fas fa-user-graduate"></i> Student Login</a><a href="logout" class="sb-link" style="color:var(--danger);"><i class="fas fa-right-from-bracket"></i> Log out</a>
+        <?php if (admin_can('manage_admins')): ?><a href="manage_admins.php" class="sb-link"><i class="fas fa-user-shield"></i> Manage Admins</a><?php endif; ?>
+        <?php if (admin_can('manage_site_settings')): ?><a href="site_settings.php" class="sb-link"><i class="fas fa-sliders"></i> Site Settings</a><?php endif; ?>
+        <?php if (admin_can('backup_db')): ?><a href="backup_database.php" class="sb-link"><i class="fas fa-download"></i> Backup Database</a><?php endif; ?>
+        <?php if (admin_can('maintenance_mode')): ?><a href="maintenance.php" class="sb-link"><i class="fas fa-screwdriver-wrench"></i> Maintenance Mode</a><?php endif; ?>
+        <a href="profile.php" class="sb-link"><i class="fas fa-user-gear"></i> My Profile</a><a href="../student_login.php" target="_blank" class="sb-link"><i class="fas fa-user-graduate"></i> Student Login</a><a href="logout.php" class="sb-link" style="color:var(--danger);"><i class="fas fa-right-from-bracket"></i> Log out</a>
     </nav>
     <div class="sb-profile"><div class="sb-avatar">A</div><div class="sb-profile-text"><strong><?= htmlspecialchars(admin_display_name()) ?></strong><span>System Manager</span></div></div>
 </aside>
@@ -144,7 +144,7 @@ $totals['missing'] = max(0, $totals['students'] - $totals['ready']);
 <main class="admin-main">
     <div class="admin-topbar">
         <div class="topbar-left"><button class="sb-toggle" id="sbToggle"><i class="fas fa-bars"></i></button><h1>Student Login Credentials</h1></div>
-        <div class="topbar-meta"><button type="button" class="topbar-action" id="printVisibleReceipts"><i class="fas fa-receipt"></i> Print Receipts</button><a href="student_credentials?action=export_csv" class="topbar-action"><i class="fas fa-file-csv"></i> Export CSV</a></div>
+        <div class="topbar-meta"><button type="button" class="topbar-action" id="printVisibleReceipts"><i class="fas fa-receipt"></i> Print Receipts</button><a href="student_credentials.php?action=export_csv" class="topbar-action"><i class="fas fa-file-csv"></i> Export CSV</a></div>
     </div>
 
     <div class="admin-body dashboard-stack">
@@ -164,7 +164,7 @@ $totals['missing'] = max(0, $totals['students'] - $totals['ready']);
                     <input type="hidden" name="action" value="generate_missing">
                     <button type="submit" class="notion-btn notion-btn-primary"><i class="fas fa-user-plus"></i> Generate Missing Accounts</button>
                     <button type="button" class="notion-btn notion-btn-ghost" id="printVisibleReceiptsPanel"><i class="fas fa-print"></i> Print Visible Receipts</button>
-                    <a href="student_credentials?action=export_csv" class="notion-btn notion-btn-ghost"><i class="fas fa-file-export"></i> Export Credentials</a>
+                    <a href="student_credentials.php?action=export_csv" class="notion-btn notion-btn-ghost"><i class="fas fa-file-export"></i> Export Credentials</a>
                 </form>
             </div>
         </section>
@@ -177,8 +177,8 @@ $totals['missing'] = max(0, $totals['students'] - $totals['ready']);
                     <div class="notion-form-group" style="flex:1;min-width:130px;"><label class="notion-label">Class</label><select name="class_id" class="notion-select"><option value="">All</option><?php foreach ($classes as $c): ?><option value="<?= (int) $c['id'] ?>" <?= $classFilter === (int) $c['id'] ? 'selected' : '' ?>><?= htmlspecialchars($c['class_name']) ?></option><?php endforeach; ?></select></div>
                     <div class="notion-form-group" style="flex:1;min-width:130px;"><label class="notion-label">Year</label><select name="year_id" class="notion-select"><option value="">All</option><?php foreach ($years as $y): ?><option value="<?= (int) $y['id'] ?>" <?= $yearFilter === (int) $y['id'] ? 'selected' : '' ?>><?= htmlspecialchars($y['year_name']) ?></option><?php endforeach; ?></select></div>
                     <button type="submit" class="notion-btn notion-btn-primary notion-btn-sm"><i class="fas fa-search"></i> Filter</button>
-                    <a href="student_credentials" class="notion-btn notion-btn-ghost notion-btn-sm">Clear</a>
-                    <?php if ($studentFilter > 0): ?><a href="student_credentials" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-users"></i> Show All</a><?php endif; ?>
+                    <a href="student_credentials.php" class="notion-btn notion-btn-ghost notion-btn-sm">Clear</a>
+                    <?php if ($studentFilter > 0): ?><a href="student_credentials.php" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-users"></i> Show All</a><?php endif; ?>
                 </form>
 
                 <div class="table-scroll"><table class="glass-table"><thead><tr><th>Student</th><th>Class</th><th>Year</th><th>Username</th><th>Password</th><th>Status</th><th>Actions</th></tr></thead><tbody>

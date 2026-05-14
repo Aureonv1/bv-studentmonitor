@@ -24,29 +24,3 @@ ExpiresByType image/x-icon "access plus 1 month"
 Header set Cache-Control "public, max-age=2592000"
 </FilesMatch>
 </IfModule>
-
-<IfModule mod_rewrite.c>
-RewriteEngine On
-RewriteBase /Bv-StudentMonitor/
-
-# Fix accidental nested project path variant.
-RewriteRule ^Bv-studentmonitor/(.*)$ /Bv-StudentMonitor/$1 [R=302,L,NC]
-
-# Canonical home.
-RewriteRule ^index(?:\.php)?$ /Bv-StudentMonitor/ [R=302,L,NC]
-
-# Favicon fallback for browsers that request /favicon.ico directly.
-RewriteRule ^favicon\.ico$ /Bv-StudentMonitor/icon.png [L,NC]
-
-# Redirect direct .php URL requests to extensionless route (GET only).
-RewriteCond %{REQUEST_METHOD} =GET
-RewriteCond %{THE_REQUEST} \s/+Bv-StudentMonitor/([^\s?]+)\.php(?:[\s?]|$) [NC]
-RewriteRule ^ %1 [R=302,L,NE]
-
-# Serve extensionless routes from matching PHP files.
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME}.php -f
-RewriteRule ^(.+?)/?$ $1.php [L,QSA,NC]
-</IfModule>
-

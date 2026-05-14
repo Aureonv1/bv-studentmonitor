@@ -121,32 +121,32 @@ $recent = $pdo->query("
 
     <div class="admin-layout">
         <aside class="sidebar" id="sidebar">
-            <a href="dashboard" class="sb-header">
+            <a href="dashboard.php" class="sb-header">
                 <img src="../logo.png" alt="BrightVision English Academy" class="sb-logo">
             </a>
             <nav class="sb-nav">
                 <div class="sb-label">Analytics</div>
-                <a href="dashboard" class="sb-link active"><i class="fas fa-chart-line"></i> Dashboard</a>
-                <?php if (admin_can('view_analytics')): ?><a href="class_analytics" class="sb-link"><i class="fas fa-chart-column"></i> Class Analytics</a><?php endif; ?>
+                <a href="dashboard.php" class="sb-link active"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <?php if (admin_can('view_analytics')): ?><a href="class_analytics.php" class="sb-link"><i class="fas fa-chart-column"></i> Class Analytics</a><?php endif; ?>
 
                 <div class="sb-label">Management</div>
                 <?php if (admin_can('manage_students')): ?>
-                    <a href="manage_students" class="sb-link"><i class="fas fa-database"></i> Data Manager</a>
-                    <a href="student_credentials" class="sb-link"><i class="fas fa-id-card"></i> Student Credentials</a>
-                    <a href="manage_academics" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
-                    <a href="export_student_ids" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
+                    <a href="manage_students.php" class="sb-link"><i class="fas fa-database"></i> Data Manager</a>
+                    <a href="student_credentials.php" class="sb-link"><i class="fas fa-id-card"></i> Student Credentials</a>
+                    <a href="manage_academics.php" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
+                    <a href="export_student_ids.php" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
                 <?php endif; ?>
-                <?php if (admin_can('manage_marks')): ?><a href="manage_marks" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a><?php endif; ?>
-                <?php if (admin_can('import_csv')): ?><a href="import_csv" class="sb-link"><i class="fas fa-upload"></i> Import Marks</a><?php endif; ?>
+                <?php if (admin_can('manage_marks')): ?><a href="manage_marks.php" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a><?php endif; ?>
+                <?php if (admin_can('import_csv')): ?><a href="import_csv.php" class="sb-link"><i class="fas fa-upload"></i> Import Marks</a><?php endif; ?>
 
                 <div class="sb-label">System</div>
-                <?php if (admin_can('manage_admins')): ?><a href="manage_admins" class="sb-link"><i class="fas fa-user-shield"></i> Manage Admins</a><?php endif; ?>
-                <?php if (admin_can('manage_site_settings')): ?><a href="site_settings" class="sb-link"><i class="fas fa-sliders"></i> Site Settings</a><?php endif; ?>
-                <?php if (admin_can('backup_db')): ?><a href="backup_database" class="sb-link"><i class="fas fa-download"></i> Backup Database</a><?php endif; ?>
-                <?php if (admin_can('maintenance_mode')): ?><a href="maintenance" class="sb-link"><i class="fas fa-screwdriver-wrench"></i> Maintenance Mode</a><?php endif; ?>
-                <a href="profile" class="sb-link"><i class="fas fa-user-gear"></i> My Profile</a>
-                <a href="../student_login" target="_blank" class="sb-link"><i class="fas fa-user-graduate"></i> Student Login</a>
-                <a href="logout" class="sb-link" style="color:var(--danger);"><i class="fas fa-right-from-bracket"></i> Log out</a>
+                <?php if (admin_can('manage_admins')): ?><a href="manage_admins.php" class="sb-link"><i class="fas fa-user-shield"></i> Manage Admins</a><?php endif; ?>
+                <?php if (admin_can('manage_site_settings')): ?><a href="site_settings.php" class="sb-link"><i class="fas fa-sliders"></i> Site Settings</a><?php endif; ?>
+                <?php if (admin_can('backup_db')): ?><a href="backup_database.php" class="sb-link"><i class="fas fa-download"></i> Backup Database</a><?php endif; ?>
+                <?php if (admin_can('maintenance_mode')): ?><a href="maintenance.php" class="sb-link"><i class="fas fa-screwdriver-wrench"></i> Maintenance Mode</a><?php endif; ?>
+                <a href="profile.php" class="sb-link"><i class="fas fa-user-gear"></i> My Profile</a>
+                <a href="../student_login.php" target="_blank" class="sb-link"><i class="fas fa-user-graduate"></i> Student Login</a>
+                <a href="logout.php" class="sb-link" style="color:var(--danger);"><i class="fas fa-right-from-bracket"></i> Log out</a>
             </nav>
             <div class="sb-profile">
                 <div class="sb-avatar">A</div>
@@ -176,25 +176,25 @@ $recent = $pdo->query("
                         <div class="icon ic-blue"><i class="fas fa-users"></i></div>
                         <div class="val-lbl">Total Enrolled</div>
                         <div class="val-num"><?= (int) $student_count ?></div>
-                        <a href="manage_students" class="val-link">View records <i class="fas fa-arrow-right"></i></a>
+                        <a href="manage_students.php" class="val-link">View records <i class="fas fa-arrow-right"></i></a>
                     </article>
                     <article class="val-card">
                         <div class="icon ic-purple"><i class="fas fa-layer-group"></i></div>
                         <div class="val-lbl">Active Classes</div>
                         <div class="val-num"><?= (int) $class_count ?></div>
-                        <a href="manage_students" class="val-link">Manage classes <i class="fas fa-arrow-right"></i></a>
+                        <a href="manage_students.php" class="val-link">Manage classes <i class="fas fa-arrow-right"></i></a>
                     </article>
                     <article class="val-card">
                         <div class="icon ic-orange"><i class="fas fa-file-lines"></i></div>
                         <div class="val-lbl">Exams Indexed</div>
                         <div class="val-num"><?= (int) $exam_count ?></div>
-                        <a href="import_csv" class="val-link">Import results <i class="fas fa-arrow-right"></i></a>
+                        <a href="import_csv.php" class="val-link">Import results <i class="fas fa-arrow-right"></i></a>
                     </article>
                     <article class="val-card">
                         <div class="icon ic-pink"><i class="fas fa-calendar"></i></div>
                         <div class="val-lbl">Academic Years</div>
                         <div class="val-num"><?= (int) $year_count ?></div>
-                        <a href="manage_academics" class="val-link">Manage cycle data <i class="fas fa-arrow-right"></i></a>
+                        <a href="manage_academics.php" class="val-link">Manage cycle data <i class="fas fa-arrow-right"></i></a>
                     </article>
                 </section>
 

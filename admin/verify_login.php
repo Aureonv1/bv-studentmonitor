@@ -114,7 +114,7 @@ if ($maskedEmail !== '' && strpos($maskedEmail, '@') !== false) {
                 </button>
             </form>
 
-            <div class="auth-foot"><a href="logout"><i class="fas fa-angle-left"></i> Cancel login</a></div>
+            <div class="auth-foot"><a href="logout.php"><i class="fas fa-angle-left"></i> Cancel login</a></div>
         </section>
     </main>
 </body>

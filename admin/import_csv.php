@@ -361,32 +361,32 @@ try {
 
     <div class="admin-layout">
         <aside class="sidebar" id="sidebar">
-            <a href="dashboard" class="sb-header">
+            <a href="dashboard.php" class="sb-header">
                 <img src="../logo.png" alt="BrightVision English Academy" class="sb-logo">
             </a>
             <nav class="sb-nav">
                 <div class="sb-label">Analytics</div>
-                <a href="dashboard" class="sb-link"><i class="fas fa-chart-line"></i> Dashboard</a>
-                <?php if (admin_can('view_analytics')): ?><a href="class_analytics" class="sb-link"><i class="fas fa-chart-column"></i> Class Analytics</a><?php endif; ?>
+                <a href="dashboard.php" class="sb-link"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <?php if (admin_can('view_analytics')): ?><a href="class_analytics.php" class="sb-link"><i class="fas fa-chart-column"></i> Class Analytics</a><?php endif; ?>
 
                 <div class="sb-label">Management</div>
                 <?php if (admin_can('manage_students')): ?>
-                    <a href="manage_students" class="sb-link"><i class="fas fa-database"></i> Data Manager</a>
-                    <a href="student_credentials" class="sb-link"><i class="fas fa-id-card"></i> Student Credentials</a>
-                    <a href="manage_academics" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
-                    <a href="export_student_ids" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
+                    <a href="manage_students.php" class="sb-link"><i class="fas fa-database"></i> Data Manager</a>
+                    <a href="student_credentials.php" class="sb-link"><i class="fas fa-id-card"></i> Student Credentials</a>
+                    <a href="manage_academics.php" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
+                    <a href="export_student_ids.php" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
                 <?php endif; ?>
-                <?php if (admin_can('manage_marks')): ?><a href="manage_marks" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a><?php endif; ?>
-                <a href="import_csv" class="sb-link active"><i class="fas fa-upload"></i> Import Marks</a>
+                <?php if (admin_can('manage_marks')): ?><a href="manage_marks.php" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a><?php endif; ?>
+                <a href="import_csv.php" class="sb-link active"><i class="fas fa-upload"></i> Import Marks</a>
 
                 <div class="sb-label">System</div>
-                <?php if (admin_can('manage_admins')): ?><a href="manage_admins" class="sb-link"><i class="fas fa-user-shield"></i> Manage Admins</a><?php endif; ?>
-                <?php if (admin_can('manage_site_settings')): ?><a href="site_settings" class="sb-link"><i class="fas fa-sliders"></i> Site Settings</a><?php endif; ?>
-                <?php if (admin_can('backup_db')): ?><a href="backup_database" class="sb-link"><i class="fas fa-download"></i> Backup Database</a><?php endif; ?>
-                <?php if (admin_can('maintenance_mode')): ?><a href="maintenance" class="sb-link"><i class="fas fa-screwdriver-wrench"></i> Maintenance Mode</a><?php endif; ?>
-                <a href="profile" class="sb-link"><i class="fas fa-user-gear"></i> My Profile</a>
-                <a href="../student_login" target="_blank" class="sb-link"><i class="fas fa-user-graduate"></i> Student Login</a>
-                <a href="logout" class="sb-link" style="color:var(--danger);"><i class="fas fa-right-from-bracket"></i> Log out</a>
+                <?php if (admin_can('manage_admins')): ?><a href="manage_admins.php" class="sb-link"><i class="fas fa-user-shield"></i> Manage Admins</a><?php endif; ?>
+                <?php if (admin_can('manage_site_settings')): ?><a href="site_settings.php" class="sb-link"><i class="fas fa-sliders"></i> Site Settings</a><?php endif; ?>
+                <?php if (admin_can('backup_db')): ?><a href="backup_database.php" class="sb-link"><i class="fas fa-download"></i> Backup Database</a><?php endif; ?>
+                <?php if (admin_can('maintenance_mode')): ?><a href="maintenance.php" class="sb-link"><i class="fas fa-screwdriver-wrench"></i> Maintenance Mode</a><?php endif; ?>
+                <a href="profile.php" class="sb-link"><i class="fas fa-user-gear"></i> My Profile</a>
+                <a href="../student_login.php" target="_blank" class="sb-link"><i class="fas fa-user-graduate"></i> Student Login</a>
+                <a href="logout.php" class="sb-link" style="color:var(--danger);"><i class="fas fa-right-from-bracket"></i> Log out</a>
             </nav>
             <div class="sb-profile">
                 <div class="sb-avatar">A</div>
@@ -485,7 +485,7 @@ try {
                             <div class="csv-sample">First import: Student Name,English,Math,Science</div>
                             <div class="csv-sample">Repeat import: Student ID,Student Name,English,Math,Science</div>
                             <div class="callout-actions" style="display:flex;flex-wrap:wrap;gap:0.5rem;">
-                                <a href="export_student_ids" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-address-card"></i> Export Generated IDs</a>
+                                <a href="export_student_ids.php" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-address-card"></i> Export Generated IDs</a>
                                 <a href="download_template" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-file-arrow-down"></i> Download Repeat Template</a>
                             </div>
                         </div>
@@ -522,7 +522,7 @@ try {
                                 <div class="info-callout">
                                     <h4><i class="fas fa-id-card"></i> New Student IDs are ready</h4>
                                     <p><?= (int) $summary['created_students'] ?> student<?= (int) $summary['created_students'] === 1 ? '' : 's' ?> received generated Student IDs. Export them before the next import and keep the Student ID column in your CSV.</p>
-                                    <a href="export_student_ids" class="notion-btn notion-btn-primary notion-btn-sm"><i class="fas fa-file-csv"></i> Export Student IDs</a>
+                                    <a href="export_student_ids.php" class="notion-btn notion-btn-primary notion-btn-sm"><i class="fas fa-file-csv"></i> Export Student IDs</a>
                                 </div>
                             <?php endif; ?>
                         <?php endif; ?>

@@ -26,6 +26,10 @@ if (!function_exists('student_url')) {
             return ($base !== '' ? $base : '') . '/';
         }
 
+        if (!str_contains($path, '.') && !str_ends_with($path, '/')) {
+            $path .= '.php';
+        }
+
         return ($base !== '' ? $base : '') . '/' . $path;
     }
 }

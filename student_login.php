@@ -148,7 +148,7 @@ $footerSettings = get_site_footer_settings($pdo);
     </div>
 
     <nav class="glass-nav glass-panel">
-        <a href="student_login" class="nav-brand logo-only">
+        <a href="student_login.php" class="nav-brand logo-only">
             <img src="logo.png" alt="BrightVision English Academy">
         </a>
     </nav>
@@ -192,7 +192,7 @@ $footerSettings = get_site_footer_settings($pdo);
 
             <div class="auth-foot">
                 <?php if ($showAdminRecovery): ?>
-                    <a href="admin/forgot_password"><i class="fas fa-key"></i> Staff account recovery</a><br>
+                    <a href="admin/forgot_password.php"><i class="fas fa-key"></i> Staff account recovery</a><br>
                 <?php endif; ?>
                 <span class="text-muted" style="font-size:0.84rem;">Students should use the credentials given by the academy.</span>
             </div>

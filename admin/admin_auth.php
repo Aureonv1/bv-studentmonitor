@@ -20,6 +20,9 @@ if (!function_exists('admin_url')) {
         if ($path === '') {
             return $base . '/admin';
         }
+        if (!str_contains($path, '.') && !str_ends_with($path, '/')) {
+            $path .= '.php';
+        }
         return $base . '/admin/' . $path;
     }
 }
@@ -36,7 +39,7 @@ if (!function_exists('admin_login_url')) {
     function admin_login_url(): string
     {
         $base = admin_base_path();
-        return ($base !== '' ? $base : '') . '/student_login';
+        return ($base !== '' ? $base : '') . '/student_login.php';
     }
 }
 

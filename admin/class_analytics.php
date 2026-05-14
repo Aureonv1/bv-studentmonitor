@@ -299,28 +299,28 @@ $exportQuery = $queryWith(['export' => 'csv', 'view' => '1']);
 
     <div class="admin-layout">
         <aside class="sidebar" id="sidebar">
-            <a href="dashboard" class="sb-header"><img src="../logo.png" alt="BrightVision English Academy" class="sb-logo"></a>
+            <a href="dashboard.php" class="sb-header"><img src="../logo.png" alt="BrightVision English Academy" class="sb-logo"></a>
             <nav class="sb-nav">
                 <div class="sb-label">Analytics</div>
-                <a href="dashboard" class="sb-link"><i class="fas fa-chart-line"></i> Dashboard</a>
-                <a href="class_analytics" class="sb-link active"><i class="fas fa-chart-column"></i> Class Analytics</a>
+                <a href="dashboard.php" class="sb-link"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <a href="class_analytics.php" class="sb-link active"><i class="fas fa-chart-column"></i> Class Analytics</a>
                 <div class="sb-label">Management</div>
                 <?php if (admin_can('manage_students')): ?>
-                    <a href="manage_students" class="sb-link"><i class="fas fa-database"></i> Data Manager</a>
-                    <a href="student_credentials" class="sb-link"><i class="fas fa-id-card"></i> Student Credentials</a>
-                    <a href="manage_academics" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
-                    <a href="export_student_ids" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
+                    <a href="manage_students.php" class="sb-link"><i class="fas fa-database"></i> Data Manager</a>
+                    <a href="student_credentials.php" class="sb-link"><i class="fas fa-id-card"></i> Student Credentials</a>
+                    <a href="manage_academics.php" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
+                    <a href="export_student_ids.php" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
                 <?php endif; ?>
-                <?php if (admin_can('manage_marks')): ?><a href="manage_marks" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a><?php endif; ?>
-                <?php if (admin_can('import_csv')): ?><a href="import_csv" class="sb-link"><i class="fas fa-upload"></i> Import Marks</a><?php endif; ?>
+                <?php if (admin_can('manage_marks')): ?><a href="manage_marks.php" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a><?php endif; ?>
+                <?php if (admin_can('import_csv')): ?><a href="import_csv.php" class="sb-link"><i class="fas fa-upload"></i> Import Marks</a><?php endif; ?>
                 <div class="sb-label">System</div>
-                <?php if (admin_can('manage_admins')): ?><a href="manage_admins" class="sb-link"><i class="fas fa-user-shield"></i> Manage Admins</a><?php endif; ?>
-                <?php if (admin_can('manage_site_settings')): ?><a href="site_settings" class="sb-link"><i class="fas fa-sliders"></i> Site Settings</a><?php endif; ?>
-                <?php if (admin_can('backup_db')): ?><a href="backup_database" class="sb-link"><i class="fas fa-download"></i> Backup Database</a><?php endif; ?>
-                <?php if (admin_can('maintenance_mode')): ?><a href="maintenance" class="sb-link"><i class="fas fa-screwdriver-wrench"></i> Maintenance Mode</a><?php endif; ?>
-                <a href="profile" class="sb-link"><i class="fas fa-user-gear"></i> My Profile</a>
-                <a href="../student_login" target="_blank" class="sb-link"><i class="fas fa-user-graduate"></i> Student Login</a>
-                <a href="logout" class="sb-link" style="color:var(--danger);"><i class="fas fa-right-from-bracket"></i> Log out</a>
+                <?php if (admin_can('manage_admins')): ?><a href="manage_admins.php" class="sb-link"><i class="fas fa-user-shield"></i> Manage Admins</a><?php endif; ?>
+                <?php if (admin_can('manage_site_settings')): ?><a href="site_settings.php" class="sb-link"><i class="fas fa-sliders"></i> Site Settings</a><?php endif; ?>
+                <?php if (admin_can('backup_db')): ?><a href="backup_database.php" class="sb-link"><i class="fas fa-download"></i> Backup Database</a><?php endif; ?>
+                <?php if (admin_can('maintenance_mode')): ?><a href="maintenance.php" class="sb-link"><i class="fas fa-screwdriver-wrench"></i> Maintenance Mode</a><?php endif; ?>
+                <a href="profile.php" class="sb-link"><i class="fas fa-user-gear"></i> My Profile</a>
+                <a href="../student_login.php" target="_blank" class="sb-link"><i class="fas fa-user-graduate"></i> Student Login</a>
+                <a href="logout.php" class="sb-link" style="color:var(--danger);"><i class="fas fa-right-from-bracket"></i> Log out</a>
             </nav>
             <div class="sb-profile"><div class="sb-avatar">A</div><div class="sb-profile-text"><strong><?= htmlspecialchars(admin_display_name()) ?></strong><span>System Manager</span></div></div>
         </aside>
@@ -374,7 +374,7 @@ $exportQuery = $queryWith(['export' => 'csv', 'view' => '1']);
                                 </select>
                             </div>
                             <button type="submit" class="notion-btn notion-btn-primary notion-btn-sm"><i class="fas fa-chart-column"></i> View Analytics</button>
-                            <a href="class_analytics" class="notion-btn notion-btn-ghost notion-btn-sm">Clear</a>
+                            <a href="class_analytics.php" class="notion-btn notion-btn-ghost notion-btn-sm">Clear</a>
                         </form>
                     </div>
                 </section>
@@ -509,7 +509,7 @@ $exportQuery = $queryWith(['export' => 'csv', 'view' => '1']);
             if (yearId) params.set('year_id', yearId);
 
             try {
-                const response = await fetch(`class_analytics?${params.toString()}`, {
+                const response = await fetch(`class_analytics.php?${params.toString()}`, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
                 if (!response.ok) return;

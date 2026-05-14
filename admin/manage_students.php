@@ -319,42 +319,42 @@ if ($editYearId > 0) {
 
     <div class="admin-layout">
         <aside class="sidebar" id="sidebar">
-            <a href="dashboard" class="sb-header">
+            <a href="dashboard.php" class="sb-header">
                 <img src="../logo.png" alt="BrightVision English Academy" class="sb-logo">
             </a>
             <nav class="sb-nav">
                 <div class="sb-label">Analytics</div>
-                <a href="dashboard" class="sb-link"><i class="fas fa-chart-line"></i> Dashboard</a>
-                <?php if (admin_can('view_analytics')): ?><a href="class_analytics" class="sb-link"><i class="fas fa-chart-column"></i> Class Analytics</a><?php endif; ?>
+                <a href="dashboard.php" class="sb-link"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <?php if (admin_can('view_analytics')): ?><a href="class_analytics.php" class="sb-link"><i class="fas fa-chart-column"></i> Class Analytics</a><?php endif; ?>
 
                 <div class="sb-label">Management</div>
-                <a href="manage_students" class="sb-link active"><i class="fas fa-database"></i> Data Manager</a>
-                <a href="student_credentials" class="sb-link"><i class="fas fa-id-card"></i> Student Credentials</a>
-                <a href="manage_academics" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
-                    <a href="export_student_ids" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
+                <a href="manage_students.php" class="sb-link active"><i class="fas fa-database"></i> Data Manager</a>
+                <a href="student_credentials.php" class="sb-link"><i class="fas fa-id-card"></i> Student Credentials</a>
+                <a href="manage_academics.php" class="sb-link"><i class="fas fa-graduation-cap"></i> Academics</a>
+                    <a href="export_student_ids.php" class="sb-link"><i class="fas fa-address-card"></i> Export Student IDs</a>
                 <?php if (admin_can('manage_marks')): ?>
-                    <a href="manage_marks" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a>
+                    <a href="manage_marks.php" class="sb-link"><i class="fas fa-pen-to-square"></i> Marks Manager</a>
                 <?php endif; ?>
                 <?php if (admin_can('import_csv')): ?>
-                    <a href="import_csv" class="sb-link"><i class="fas fa-upload"></i> Import Marks</a>
+                    <a href="import_csv.php" class="sb-link"><i class="fas fa-upload"></i> Import Marks</a>
                 <?php endif; ?>
 
                 <div class="sb-label">System</div>
                 <?php if (admin_can('manage_admins')): ?>
-                    <a href="manage_admins" class="sb-link"><i class="fas fa-user-shield"></i> Manage Admins</a>
+                    <a href="manage_admins.php" class="sb-link"><i class="fas fa-user-shield"></i> Manage Admins</a>
                 <?php endif; ?>
                 <?php if (admin_can('manage_site_settings')): ?>
-                    <a href="site_settings" class="sb-link"><i class="fas fa-sliders"></i> Site Settings</a>
+                    <a href="site_settings.php" class="sb-link"><i class="fas fa-sliders"></i> Site Settings</a>
                 <?php endif; ?>
                 <?php if (admin_can('backup_db')): ?>
-                    <a href="backup_database" class="sb-link"><i class="fas fa-download"></i> Backup Database</a>
+                    <a href="backup_database.php" class="sb-link"><i class="fas fa-download"></i> Backup Database</a>
                 <?php endif; ?>
                 <?php if (admin_can('maintenance_mode')): ?>
-                    <a href="maintenance" class="sb-link"><i class="fas fa-screwdriver-wrench"></i> Maintenance Mode</a>
+                    <a href="maintenance.php" class="sb-link"><i class="fas fa-screwdriver-wrench"></i> Maintenance Mode</a>
                 <?php endif; ?>
-                <a href="profile" class="sb-link"><i class="fas fa-user-gear"></i> My Profile</a>
-                <a href="../student_login" target="_blank" class="sb-link"><i class="fas fa-user-graduate"></i> Student Login</a>
-                <a href="logout" class="sb-link" style="color:var(--danger);"><i class="fas fa-right-from-bracket"></i> Log out</a>
+                <a href="profile.php" class="sb-link"><i class="fas fa-user-gear"></i> My Profile</a>
+                <a href="../student_login.php" target="_blank" class="sb-link"><i class="fas fa-user-graduate"></i> Student Login</a>
+                <a href="logout.php" class="sb-link" style="color:var(--danger);"><i class="fas fa-right-from-bracket"></i> Log out</a>
             </nav>
             <div class="sb-profile">
                 <div class="sb-avatar">A</div>
@@ -690,7 +690,7 @@ if ($editYearId > 0) {
                                                         <a href="manage_students.php?<?= htmlspecialchars($query_with(['edit_student' => (int) $student['id']], ['edit_class', 'edit_year'])) ?>" class="notion-btn notion-btn-ghost notion-btn-sm">
                                                             <i class="fas fa-pen"></i> Edit
                                                         </a>
-                                                        <a href="student_credentials?student_id=<?= (int) $student['id'] ?>" class="notion-btn notion-btn-ghost notion-btn-sm">
+                                                        <a href="student_credentials.php?student_id=<?= (int) $student['id'] ?>" class="notion-btn notion-btn-ghost notion-btn-sm">
                                                             <i class="fas fa-key"></i> Credentials
                                                         </a>
                                                         <form method="POST">
