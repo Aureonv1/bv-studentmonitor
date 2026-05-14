@@ -290,6 +290,21 @@ h6 {
     transform: translateY(-2px);
 }
 
+.btn-soft {
+    color: var(--primary);
+    background: rgba(13, 79, 158, 0.08);
+    border: 1px solid rgba(13, 79, 158, 0.18);
+    box-shadow: none;
+}
+
+.btn-soft:hover {
+    color: #ffffff;
+    background: var(--primary);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(13, 79, 158, 0.18);
+}
+
 .btn-danger {
     color: var(--danger);
     background: rgba(220, 38, 38, 0.1);
@@ -845,6 +860,10 @@ h6 {
 .auth-foot {
     margin-top: 1rem;
     text-align: center;
+}
+
+.auth-secondary-action {
+    margin-top: 0.75rem;
 }
 
 .auth-foot a {

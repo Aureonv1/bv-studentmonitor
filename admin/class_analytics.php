@@ -477,6 +477,7 @@ $exportQuery = $queryWith(['export' => 'csv', 'view' => '1']);
                     </section>
                 <?php endif; ?>
             </div>
+            <?php render_admin_footer($pdo); ?>
         </main>
     </div>
 

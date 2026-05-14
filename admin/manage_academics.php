@@ -165,6 +165,7 @@ $years = $pdo->query("SELECT y.id, y.year_name, COUNT(s.id) AS students FROM aca
             </div></article>
         </section>
     </div>
+    <?php render_admin_footer($pdo); ?>
 </main>
 </div>
 <script>const sidebar=document.getElementById('sidebar');const sbOverlay=document.getElementById('sbOverlay');const sbToggle=document.getElementById('sbToggle');sbToggle?.addEventListener('click',()=>{sidebar.classList.toggle('open');sbOverlay.classList.toggle('show');});sbOverlay?.addEventListener('click',()=>{sidebar.classList.remove('open');sbOverlay.classList.remove('show');});</script>

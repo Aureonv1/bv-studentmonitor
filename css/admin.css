@@ -901,6 +901,17 @@
     background: #ffffff;
 }
 
+.admin-panel-footer {
+    width: 100%;
+    margin: 1.25rem 0 0;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.82);
+}
+
+.admin-panel-footer .footer-brand {
+    font-size: 1rem;
+}
+
 /* Import page helpers */
 .info-callout {
     border: 1px solid rgba(13, 79, 158, 0.24);

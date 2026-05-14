@@ -204,6 +204,7 @@ $totals['missing'] = max(0, $totals['students'] - $totals['ready']);
             </div>
         </section>
     </div>
+    <?php render_admin_footer($pdo); ?>
 </main>
 </div>
 <div class="receipt-print-area" aria-hidden="true">

@@ -157,7 +157,7 @@ $footerSettings = get_site_footer_settings($pdo);
         <section class="glass-panel auth-card reveal d1">
             <div class="auth-brand">
                 <img src="logo.png" alt="BrightVision English Academy" class="auth-logo-img">
-                <h1>BrightVision Login</h1>
+                <h1>BV-StudentMonitor Login</h1>
                 <p>Use your academy account credentials.</p>
             </div>
 

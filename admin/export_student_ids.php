@@ -159,6 +159,7 @@ $totalIds = count($students);
                 </div>
             </section>
         </div>
+        <?php render_admin_footer($pdo); ?>
     </main>
 </div>
 

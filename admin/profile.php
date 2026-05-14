@@ -191,6 +191,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                     </div>
                 </section>
             </div>
+            <?php render_admin_footer($pdo); ?>
         </main>
     </div>
 

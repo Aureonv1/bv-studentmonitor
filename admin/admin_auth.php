@@ -24,6 +24,14 @@ if (!function_exists('admin_url')) {
     }
 }
 
+if (!function_exists('render_admin_footer')) {
+    function render_admin_footer(PDO $pdo): void
+    {
+        require_once __DIR__ . '/../footer.php';
+        render_portal_footer(get_site_footer_settings($pdo), 'admin-panel-footer no-print');
+    }
+}
+
 if (!function_exists('admin_login_url')) {
     function admin_login_url(): string
     {

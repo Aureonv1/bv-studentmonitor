@@ -106,9 +106,12 @@ if ($maskedEmail !== '' && strpos($maskedEmail, '@') !== false) {
                 <button type="submit" class="btn btn-primary btn-block">Verify <i class="fas fa-arrow-right"></i></button>
             </form>
 
-            <form method="POST" style="margin-top:0.8rem;">
+            <form method="POST" class="auth-secondary-action">
                 <input type="hidden" name="action" value="resend">
-                <button type="submit" class="notion-btn notion-btn-ghost" style="width:100%;justify-content:center;"><i class="fas fa-paper-plane"></i> Resend Code</button>
+                <button type="submit" class="btn btn-soft btn-block">
+                    Resend code
+                    <i class="fas fa-paper-plane"></i>
+                </button>
             </form>
 
             <div class="auth-foot"><a href="logout"><i class="fas fa-angle-left"></i> Cancel login</a></div>
