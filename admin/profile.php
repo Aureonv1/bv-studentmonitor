@@ -5,10 +5,11 @@ require_once 'admin_auth.php';
 
 require_admin_login($pdo);
 
-$flash = null;
+$flash = $_SESSION['admin_flash'] ?? null;
+unset($_SESSION['admin_flash']);
 $adminId = (int) ($_SESSION['admin_id'] ?? 0);
 
-$stmt = $pdo->prepare('SELECT id, username, full_name FROM admins WHERE id = ? LIMIT 1');
+$stmt = $pdo->prepare('SELECT id, username, full_name, email, password_hash FROM admins WHERE id = ? LIMIT 1');
 $stmt->execute([$adminId]);
 $admin = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -19,29 +20,64 @@ if (!$admin) {
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     try {
-        $newUsername = strtolower(trim((string) ($_POST['username'] ?? '')));
-        if ($newUsername === '') {
-            throw new RuntimeException('Username is required.');
-        }
-        if (!preg_match('/^[a-z0-9_.-]{3,50}$/', $newUsername)) {
-            throw new RuntimeException('Use 3-50 letters, numbers, dots, dashes, or underscores.');
-        }
-        if (is_super_admin_username((string) $admin['username']) && !is_super_admin_username($newUsername)) {
-            throw new RuntimeException('The super admin username must stay rnsdev.');
-        }
+        $action = (string) ($_POST['action'] ?? 'update_username');
 
-        $checkStmt = $pdo->prepare('SELECT id FROM admins WHERE username = ? AND id <> ? LIMIT 1');
-        $checkStmt->execute([$newUsername, $adminId]);
-        if ((int) $checkStmt->fetchColumn() > 0) {
-            throw new RuntimeException('That username is already taken.');
+        if ($action === 'change_password') {
+            $currentPassword = (string) ($_POST['current_password'] ?? '');
+            $newPassword = (string) ($_POST['new_password'] ?? '');
+            $confirmPassword = (string) ($_POST['confirm_password'] ?? '');
+
+            if ($currentPassword === '' || $newPassword === '' || $confirmPassword === '') {
+                throw new RuntimeException('Current password, new password, and confirmation are required.');
+            }
+            if (!password_verify($currentPassword, (string) ($admin['password_hash'] ?? ''))) {
+                throw new RuntimeException('Current password is incorrect.');
+            }
+            if (strlen($newPassword) < 8) {
+                throw new RuntimeException('New password must be at least 8 characters.');
+            }
+            if ($newPassword !== $confirmPassword) {
+                throw new RuntimeException('New password and confirmation do not match.');
+            }
+            if (password_verify($newPassword, (string) ($admin['password_hash'] ?? ''))) {
+                throw new RuntimeException('New password must be different from the current password.');
+            }
+
+            $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
+            $updateStmt = $pdo->prepare('UPDATE admins SET password_hash = ? WHERE id = ?');
+            $updateStmt->execute([$passwordHash, $adminId]);
+            $admin['password_hash'] = $passwordHash;
+            $flash = ['type' => 'success', 'text' => 'Password changed successfully.'];
+        } else {
+            $newUsername = strtolower(trim((string) ($_POST['username'] ?? '')));
+            $email = strtolower(trim((string) ($_POST['email'] ?? '')));
+            if ($newUsername === '') {
+                throw new RuntimeException('Username is required.');
+            }
+            if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new RuntimeException('Enter a valid email address.');
+            }
+            if (!preg_match('/^[a-z0-9_.-]{3,50}$/', $newUsername)) {
+                throw new RuntimeException('Use 3-50 letters, numbers, dots, dashes, or underscores.');
+            }
+            if (is_super_admin_username((string) $admin['username']) && !is_super_admin_username($newUsername)) {
+                throw new RuntimeException('The super admin username must stay rnsdev.');
+            }
+
+            $checkStmt = $pdo->prepare('SELECT id FROM admins WHERE username = ? AND id <> ? LIMIT 1');
+            $checkStmt->execute([$newUsername, $adminId]);
+            if ((int) $checkStmt->fetchColumn() > 0) {
+                throw new RuntimeException('That username is already taken.');
+            }
+
+            $updateStmt = $pdo->prepare('UPDATE admins SET username = ?, email = ? WHERE id = ?');
+            $updateStmt->execute([$newUsername, $email !== '' ? $email : null, $adminId]);
+
+            $admin['username'] = $newUsername;
+            $admin['email'] = $email;
+            refresh_admin_session($pdo);
+            $flash = ['type' => 'success', 'text' => 'Account details updated.'];
         }
-
-        $updateStmt = $pdo->prepare('UPDATE admins SET username = ? WHERE id = ?');
-        $updateStmt->execute([$newUsername, $adminId]);
-
-        $admin['username'] = $newUsername;
-        refresh_admin_session($pdo);
-        $flash = ['type' => 'success', 'text' => 'Username updated.'];
     } catch (Throwable $e) {
         $flash = ['type' => 'error', 'text' => $e->getMessage()];
     }
@@ -108,15 +144,48 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 <?php endif; ?>
 
                 <section class="dash-panel reveal d1">
-                    <div class="panel-head"><h2><i class="fas fa-user-gear" style="color:var(--primary);"></i> Account Username</h2></div>
+                    <div class="panel-head"><h2><i class="fas fa-user-gear" style="color:var(--primary);"></i> Account Details</h2></div>
                     <div class="panel-body">
                         <form method="POST" class="form-grid">
+                            <input type="hidden" name="action" value="update_username">
                             <div class="form-group">
                                 <label class="form-label" for="username">Username</label>
                                 <input type="text" id="username" name="username" class="form-control" value="<?= htmlspecialchars((string) $admin['username']) ?>" required>
                             </div>
+                            <div class="form-group">
+                                <label class="form-label" for="email">Security Email</label>
+                                <input type="email" id="email" name="email" class="form-control" value="<?= htmlspecialchars((string) ($admin['email'] ?? '')) ?>" autocomplete="email" placeholder="you@example.com">
+                            </div>
                             <div class="form-group" style="align-self:end;">
-                                <button type="submit" class="notion-btn notion-btn-primary"><i class="fas fa-floppy-disk"></i> Save Username</button>
+                                <button type="submit" class="notion-btn notion-btn-primary"><i class="fas fa-floppy-disk"></i> Save Details</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <section class="dash-panel reveal d2">
+                    <div class="panel-head"><h2><i class="fas fa-key" style="color:var(--primary);"></i> Change Password</h2></div>
+                    <div class="panel-body">
+                        <form method="POST">
+                            <input type="hidden" name="action" value="change_password">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label" for="current_password">Current Password</label>
+                                    <input type="password" id="current_password" name="current_password" class="form-control" autocomplete="current-password" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="new_password">New Password</label>
+                                    <input type="password" id="new_password" name="new_password" class="form-control" autocomplete="new-password" minlength="8" required>
+                                </div>
+                            </div>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label" for="confirm_password">Confirm New Password</label>
+                                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" autocomplete="new-password" minlength="8" required>
+                                </div>
+                                <div class="form-group" style="align-self:end;">
+                                    <button type="submit" class="notion-btn notion-btn-primary"><i class="fas fa-lock"></i> Change Password</button>
+                                </div>
                             </div>
                         </form>
                     </div>

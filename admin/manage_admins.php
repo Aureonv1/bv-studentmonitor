@@ -28,6 +28,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         if ($action === 'add_admin') {
             $username = strtolower(trim((string) ($_POST['username'] ?? '')));
             $fullName = trim((string) ($_POST['full_name'] ?? ''));
+            $email = strtolower(trim((string) ($_POST['email'] ?? '')));
             $password = (string) ($_POST['password'] ?? '');
 
             if ($username === '' || $password === '') {
@@ -35,6 +36,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             }
             if (strlen($password) < 6) {
                 throw new RuntimeException('Password must be at least 6 characters.');
+            }
+            if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new RuntimeException('Enter a valid admin email address.');
             }
 
             $checkStmt = $pdo->prepare('SELECT id FROM admins WHERE username = ? LIMIT 1');
@@ -52,6 +56,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 INSERT INTO admins (
                     username,
                     full_name,
+                    email,
                     password_hash,
                     is_active,
                     can_manage_students,
@@ -62,11 +67,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                     can_manage_admins,
                     can_manage_site_settings,
                     can_view_analytics
-                ) VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stmt->execute([
                 $username,
                 $fullName !== '' ? $fullName : $username,
+                $email !== '' ? $email : null,
                 password_hash($password, PASSWORD_DEFAULT),
                 $permissionValues['can_manage_students'],
                 $permissionValues['can_manage_marks'],
@@ -93,8 +99,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             }
 
             $fullName = trim((string) ($_POST['full_name'] ?? ''));
+            $email = strtolower(trim((string) ($_POST['email'] ?? '')));
             $isActive = !empty($_POST['is_active']) ? 1 : 0;
             $isSuperAdmin = is_super_admin_username((string) $target['username']);
+            if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new RuntimeException('Enter a valid admin email address.');
+            }
 
             $permissionValues = [];
             foreach (array_keys($allPermissions) as $column) {
@@ -114,6 +124,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $updateStmt = $pdo->prepare("
                 UPDATE admins SET
                     full_name = ?,
+                    email = ?,
                     is_active = ?,
                     can_manage_students = ?,
                     can_manage_marks = ?,
@@ -127,6 +138,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             ");
             $updateStmt->execute([
                 $fullName !== '' ? $fullName : $target['username'],
+                $email !== '' ? $email : null,
                 $isActive,
                 $permissionValues['can_manage_students'],
                 $permissionValues['can_manage_marks'],
@@ -189,6 +201,7 @@ $admins = $pdo->query("
         id,
         username,
         full_name,
+        email,
         is_active,
         can_manage_students,
         can_manage_marks,
@@ -543,6 +556,7 @@ foreach ($admins as $adm) {
                                     <div class="form-group"><label class="form-label">Username</label><input type="text" name="username" class="form-control" required></div>
                                     <div class="form-group"><label class="form-label">Full Name</label><input type="text" name="full_name" class="form-control"></div>
                                 </div>
+                                <div class="form-group"><label class="form-label">Security Email</label><input type="email" name="email" class="form-control" placeholder="admin@example.com"></div>
                                 <div class="form-group"><label class="form-label">Password</label><input type="password" name="password" class="form-control" minlength="6" required></div>
                                 <div class="form-group">
                                     <label class="form-label">Permissions</label>
@@ -574,6 +588,7 @@ foreach ($admins as $adm) {
                                             <div class="admin-identity">
                                                 <strong><?= htmlspecialchars((string) ($row['full_name'] ?: $row['username'])) ?></strong>
                                                 <span class="text-muted">@<?= htmlspecialchars((string) $row['username']) ?></span>
+                                                <span class="text-muted"><?= htmlspecialchars((string) ($row['email'] ?: 'No security email')) ?></span>
                                                 <?php if ($isSuperAdminRow): ?>
                                                     <span class="meta-chip"><i class="fas fa-crown"></i> Super Admin</span>
                                                 <?php endif; ?>
@@ -593,6 +608,7 @@ foreach ($admins as $adm) {
                                                 <input type="hidden" name="action" value="update_admin">
                                                 <input type="hidden" name="admin_id" value="<?= (int) $row['id'] ?>">
                                                 <input type="hidden" name="full_name" value="<?= htmlspecialchars((string) ($row['full_name'] ?? '')) ?>">
+                                                <input type="hidden" name="email" value="<?= htmlspecialchars((string) ($row['email'] ?? '')) ?>">
                                                 <?php foreach (array_keys($allPermissions) as $column): ?>
                                                     <?php if (!empty($row[$column])): ?>
                                                         <input type="hidden" name="<?= htmlspecialchars($column) ?>" value="1">
@@ -612,6 +628,7 @@ foreach ($admins as $adm) {
                                                 <input type="hidden" name="action" value="update_admin">
                                                 <input type="hidden" name="admin_id" value="<?= (int) $row['id'] ?>">
                                                 <input type="hidden" name="full_name" value="<?= htmlspecialchars((string) ($row['full_name'] ?: $row['username'])) ?>">
+                                                <input type="hidden" name="email" value="<?= htmlspecialchars((string) ($row['email'] ?? '')) ?>">
                                                 <input type="hidden" name="is_active" value="<?= !empty($row['is_active']) ? 1 : 0 ?>">
                                                 <div class="perm-editor-grid">
                                                     <?php foreach ($allPermissions as $column => $label): ?>
@@ -634,6 +651,7 @@ foreach ($admins as $adm) {
                                                 <input type="hidden" name="action" value="update_admin">
                                                 <input type="hidden" name="admin_id" value="<?= (int) $row['id'] ?>">
                                                 <input type="hidden" name="full_name" value="<?= htmlspecialchars((string) ($row['full_name'] ?: $row['username'])) ?>">
+                                                <input type="hidden" name="email" value="<?= htmlspecialchars((string) ($row['email'] ?? '')) ?>">
                                                 <input type="hidden" name="is_active" value="<?= !empty($row['is_active']) ? 1 : 0 ?>">
                                                 <?php foreach (array_keys($allPermissions) as $column): ?>
                                                     <?php if (!empty($row[$column])): ?>
@@ -642,6 +660,19 @@ foreach ($admins as $adm) {
                                                 <?php endforeach; ?>
                                                 <input type="password" name="new_password" class="form-control" minlength="6" placeholder="New password">
                                                 <button type="submit" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-key"></i> Reset</button>
+                                            </form>
+                                            <form method="POST" class="quick-actions">
+                                                <input type="hidden" name="action" value="update_admin">
+                                                <input type="hidden" name="admin_id" value="<?= (int) $row['id'] ?>">
+                                                <input type="hidden" name="full_name" value="<?= htmlspecialchars((string) ($row['full_name'] ?: $row['username'])) ?>">
+                                                <input type="hidden" name="is_active" value="<?= !empty($row['is_active']) ? 1 : 0 ?>">
+                                                <?php foreach (array_keys($allPermissions) as $column): ?>
+                                                    <?php if (!empty($row[$column])): ?>
+                                                        <input type="hidden" name="<?= htmlspecialchars($column) ?>" value="1">
+                                                    <?php endif; ?>
+                                                <?php endforeach; ?>
+                                                <input type="email" name="email" class="form-control" value="<?= htmlspecialchars((string) ($row['email'] ?? '')) ?>" placeholder="Security email">
+                                                <button type="submit" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-envelope"></i> Save Email</button>
                                             </form>
                                             <form method="POST" onsubmit="return confirm('Delete this admin account?');">
                                                 <input type="hidden" name="action" value="delete_admin">

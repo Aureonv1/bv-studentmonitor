@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS `student_accounts`;
 DROP TABLE IF EXISTS `marks`;
 DROP TABLE IF EXISTS `imports_log`;
 DROP TABLE IF EXISTS `database_backups`;
+DROP TABLE IF EXISTS `admin_security_codes`;
 DROP TABLE IF EXISTS `exams`;
 DROP TABLE IF EXISTS `students`;
 DROP TABLE IF EXISTS `student_code_counter`;
@@ -31,6 +32,7 @@ CREATE TABLE IF NOT EXISTS `admins` (
   `id` INT AUTO_INCREMENT PRIMARY KEY,
   `username` VARCHAR(50) NOT NULL UNIQUE,
   `full_name` VARCHAR(100) NULL,
+  `email` VARCHAR(190) NULL,
   `password_hash` VARCHAR(255) NOT NULL,
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `can_manage_students` TINYINT(1) NOT NULL DEFAULT 1,
@@ -175,6 +177,19 @@ CREATE TABLE IF NOT EXISTS `database_backups` (
     FOREIGN KEY (`created_by`) REFERENCES `admins` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `admin_security_codes` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `admin_id` INT NOT NULL,
+  `purpose` VARCHAR(30) NOT NULL,
+  `code_hash` VARCHAR(255) NOT NULL,
+  `expires_at` DATETIME NOT NULL,
+  `used_at` DATETIME NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY `idx_admin_security_lookup` (`admin_id`, `purpose`, `expires_at`),
+  CONSTRAINT `fk_admin_security_codes_admin`
+    FOREIGN KEY (`admin_id`) REFERENCES `admins` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 -- Migration safety for older installs
 ALTER TABLE `marks`
   ADD COLUMN IF NOT EXISTS `exam_name` VARCHAR(100) NOT NULL DEFAULT 'Term Exam' AFTER `student_id`;
@@ -184,6 +199,9 @@ ALTER TABLE `marks`
 
 ALTER TABLE `marks`
   ADD COLUMN IF NOT EXISTS `max_marks` DECIMAL(7,2) NOT NULL DEFAULT 100.00 AFTER `marks_obtained`;
+
+ALTER TABLE `admins`
+  ADD COLUMN IF NOT EXISTS `email` VARCHAR(190) NULL AFTER `full_name`;
 
 ALTER TABLE `admins`
   ADD COLUMN IF NOT EXISTS `can_manage_site_settings` TINYINT(1) NOT NULL DEFAULT 1 AFTER `can_manage_admins`;
@@ -336,8 +354,8 @@ VALUES (
   1,
   'ONYX',
   'https://onyxrns.com',
-  'BV-BrightVision',
-  'BV-BrightVision',
+  'BV-StudentMonitor',
+  'BV-StudentMonitor',
   'All rights reserved.',
   'Collaborated with apexinventives',
   'Privacy',

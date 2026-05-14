@@ -24,6 +24,14 @@ if (!function_exists('admin_url')) {
     }
 }
 
+if (!function_exists('admin_login_url')) {
+    function admin_login_url(): string
+    {
+        $base = admin_base_path();
+        return ($base !== '' ? $base : '') . '/student_login';
+    }
+}
+
 if (!defined('SUPER_ADMIN_USERNAME')) {
     define('SUPER_ADMIN_USERNAME', 'rnsdev');
 }
@@ -80,6 +88,7 @@ if (!function_exists('set_admin_session_state')) {
         $_SESSION['admin_id'] = (int) ($adminRow['id'] ?? 0);
         $_SESSION['admin_username'] = (string) ($adminRow['username'] ?? '');
         $_SESSION['admin_name'] = (string) ($adminRow['full_name'] ?? 'Administrator');
+        $_SESSION['admin_email'] = (string) ($adminRow['email'] ?? '');
         $_SESSION['admin_permissions'] = admin_permissions_from_row($adminRow);
     }
 }
@@ -97,6 +106,7 @@ if (!function_exists('refresh_admin_session')) {
                 id,
                 username,
                 full_name,
+                email,
                 is_active,
                 can_manage_students,
                 can_manage_marks,
@@ -131,9 +141,10 @@ if (!function_exists('require_admin_login')) {
                 $_SESSION['admin_id'],
                 $_SESSION['admin_username'],
                 $_SESSION['admin_name'],
+                $_SESSION['admin_email'],
                 $_SESSION['admin_permissions']
             );
-            header('Location: ' . admin_url('login'));
+            header('Location: ' . admin_login_url());
             exit;
         }
     }
