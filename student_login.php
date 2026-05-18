@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/session_bootstrap.php';
 require_once 'maintenance_mode.php';
 require_once 'config.php';
 require_once 'student_auth.php';
@@ -202,7 +202,6 @@ $footerSettings = get_site_footer_settings($pdo);
     <?php render_portal_footer($footerSettings, ''); ?>
 </body>
 </html>
-
 
 
 

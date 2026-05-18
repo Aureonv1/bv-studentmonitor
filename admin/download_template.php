@@ -1,5 +1,5 @@
-﻿<?php
-session_start();
+<?php
+require_once __DIR__ . '/../session_bootstrap.php';
 require_once '../config.php';
 require_once 'admin_auth.php';
 
