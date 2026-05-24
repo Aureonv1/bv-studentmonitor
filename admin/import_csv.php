@@ -344,8 +344,8 @@ try {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Import Data Hub - BrightVision</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="/Bv-StudentMonitor/icon.png?v=20260424">
-    <link rel="shortcut icon" href="/Bv-StudentMonitor/icon.png?v=20260424">
+    <link rel="icon" type="image/png" sizes="32x32" href="../icon.png?v=20260424">
+    <link rel="shortcut icon" href="../icon.png?v=20260424">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
@@ -446,7 +446,7 @@ try {
                             <div class="csv-sample">Student ID,Student Name,English,Mathematics,Science</div>
                         </div>
 
-                        <form method="GET" action="download_class_template" class="filter-form">
+                        <form method="GET" action="download_class_template.php" class="filter-form">
                             <div class="notion-form-group" style="min-width:220px;flex:1;">
                                 <label class="notion-label" for="template_class_id">Class</label>
                                 <select id="template_class_id" name="class_id" class="notion-select" required>
@@ -476,7 +476,7 @@ try {
                 <section class="dash-panel reveal d2" style="max-width:880px;">
                     <div class="panel-head">
                         <h2><i class="fas fa-database" style="color:var(--primary);"></i> Batch Upload</h2>
-                        <a href="download_template" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-file-arrow-down"></i> Download Template</a>
+                        <a href="download_template.php" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-file-arrow-down"></i> Download Template</a>
                     </div>
                     <div class="panel-body">
                         <div class="info-callout">
@@ -486,7 +486,7 @@ try {
                             <div class="csv-sample">Repeat import: Student ID,Student Name,English,Math,Science</div>
                             <div class="callout-actions" style="display:flex;flex-wrap:wrap;gap:0.5rem;">
                                 <a href="export_student_ids.php" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-address-card"></i> Export Generated IDs</a>
-                                <a href="download_template" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-file-arrow-down"></i> Download Repeat Template</a>
+                                <a href="download_template.php" class="notion-btn notion-btn-ghost notion-btn-sm"><i class="fas fa-file-arrow-down"></i> Download Repeat Template</a>
                             </div>
                         </div>
 

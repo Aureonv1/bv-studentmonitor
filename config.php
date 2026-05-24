@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/compatibility.php';
+
 if (!function_exists('load_env_file')) {
     function load_env_file(string $path): void
     {

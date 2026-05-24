@@ -14,7 +14,7 @@ $set_flash = static function (string $type, string $text): void {
 };
 
 $redirect_back = static function (string $returnQuery = ''): void {
-    $target = 'manage_students';
+    $target = 'manage_students.php';
     if ($returnQuery !== '') {
         $target .= '?' . $returnQuery;
     }
@@ -302,8 +302,8 @@ if ($editYearId > 0) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Management - BrightVision</title>
-    <link rel="icon" type="image/png" href="/Bv-StudentMonitor/icon.png?v=20260424">
-    <link rel="shortcut icon" href="/Bv-StudentMonitor/icon.png?v=20260424">
+    <link rel="icon" type="image/png" href="../icon.png?v=20260424">
+    <link rel="shortcut icon" href="../icon.png?v=20260424">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
@@ -637,7 +637,7 @@ if ($editYearId > 0) {
                             <a href="manage_students.php" class="notion-btn notion-btn-ghost notion-btn-sm">Clear</a>
                             <?php if ($filterClass !== ''): ?>
                                 <a
-                                    href="export_student_roster?class_id=<?= urlencode((string) $filterClass) ?><?= $filterYear !== '' ? '&year_id=' . urlencode((string) $filterYear) : '' ?>"
+                                    href="export_student_roster.php?class_id=<?= urlencode((string) $filterClass) ?><?= $filterYear !== '' ? '&year_id=' . urlencode((string) $filterYear) : '' ?>"
                                     class="notion-btn notion-btn-primary notion-btn-sm"
                                 >
                                     <i class="fas fa-id-card"></i> Export IDs

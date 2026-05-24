@@ -49,8 +49,8 @@ $totalIds = count($students);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Export Student IDs - BrightVision</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="/Bv-StudentMonitor/icon.png?v=20260424">
-    <link rel="shortcut icon" href="/Bv-StudentMonitor/icon.png?v=20260424">
+    <link rel="icon" type="image/png" sizes="32x32" href="../icon.png?v=20260424">
+    <link rel="shortcut icon" href="../icon.png?v=20260424">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
@@ -121,7 +121,7 @@ $totalIds = count($students);
                         <button type="submit" class="notion-btn notion-btn-primary notion-btn-sm"><i class="fas fa-search"></i> Load Students</button>
                         <a href="export_student_ids.php" class="notion-btn notion-btn-ghost notion-btn-sm">Clear</a>
                         <?php if ($classId > 0): ?>
-                            <a href="export_student_roster?class_id=<?= (int) $classId ?><?= $yearId > 0 ? '&year_id=' . (int) $yearId : '' ?>" class="notion-btn notion-btn-primary notion-btn-sm"><i class="fas fa-file-csv"></i> Export CSV</a>
+                            <a href="export_student_roster.php?class_id=<?= (int) $classId ?><?= $yearId > 0 ? '&year_id=' . (int) $yearId : '' ?>" class="notion-btn notion-btn-primary notion-btn-sm"><i class="fas fa-file-csv"></i> Export CSV</a>
                         <?php endif; ?>
                     </form>
                 </div>

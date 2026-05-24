@@ -64,7 +64,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $setFlash('error', $e->getMessage());
     }
 
-    header('Location: manage_academics');
+    header('Location: manage_academics.php');
     exit;
 }
 
@@ -80,8 +80,8 @@ $years = $pdo->query("SELECT y.id, y.year_name, COUNT(s.id) AS students FROM aca
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Academics - BrightVision</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="/Bv-StudentMonitor/icon.png?v=20260424">
-    <link rel="shortcut icon" href="/Bv-StudentMonitor/icon.png?v=20260424">
+    <link rel="icon" type="image/png" sizes="32x32" href="../icon.png?v=20260424">
+    <link rel="shortcut icon" href="../icon.png?v=20260424">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>

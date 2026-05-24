@@ -72,8 +72,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forgot Password - BrightVision</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="/Bv-StudentMonitor/icon.png?v=20260424">
-    <link rel="shortcut icon" href="/Bv-StudentMonitor/icon.png?v=20260424">
+    <link rel="icon" type="image/png" sizes="32x32" href="../icon.png?v=20260424">
+    <link rel="shortcut icon" href="../icon.png?v=20260424">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"></noscript>
@@ -109,7 +109,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                     <button type="submit" class="btn btn-primary btn-block">Reset Password <i class="fas fa-arrow-right"></i></button>
                 </form>
             <?php elseif ($step === 'done'): ?>
-                <a href="login" class="btn btn-primary btn-block">Back to Login <i class="fas fa-arrow-right"></i></a>
+                <a href="login.php" class="btn btn-primary btn-block">Back to Login <i class="fas fa-arrow-right"></i></a>
             <?php else: ?>
                 <form method="POST">
                     <input type="hidden" name="action" value="request">
@@ -121,7 +121,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 </form>
             <?php endif; ?>
 
-            <div class="auth-foot"><a href="login"><i class="fas fa-angle-left"></i> Back to login</a></div>
+            <div class="auth-foot"><a href="login.php"><i class="fas fa-angle-left"></i> Back to login</a></div>
         </section>
     </main>
 </body>

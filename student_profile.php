@@ -160,8 +160,8 @@ $footerSettings = get_site_footer_settings($pdo);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Progress - BrightVision</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="/Bv-StudentMonitor/icon.png?v=20260424">
-    <link rel="shortcut icon" href="/Bv-StudentMonitor/icon.png?v=20260424">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon.png?v=20260424">
+    <link rel="shortcut icon" href="icon.png?v=20260424">
     <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -176,11 +176,11 @@ $footerSettings = get_site_footer_settings($pdo);
     </div>
 
     <nav class="glass-nav glass-panel no-print">
-        <a href="student_profile" class="nav-brand logo-only">
+        <a href="student_profile.php" class="nav-brand logo-only">
             <img src="logo.png" alt="BrightVision English Academy">
         </a>
         <div class="nav-links">
-            <a href="student_logout" class="nav-link"><i class="fas fa-right-from-bracket"></i> Logout</a>
+            <a href="student_logout.php" class="nav-link"><i class="fas fa-right-from-bracket"></i> Logout</a>
         </div>
     </nav>
 

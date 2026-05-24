@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/compatibility.php';
 
 $session_path = __DIR__ . DIRECTORY_SEPARATOR . 'tmp' . DIRECTORY_SEPARATOR . 'sessions';
 

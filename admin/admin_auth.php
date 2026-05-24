@@ -1,22 +1,5 @@
 <?php
-
-if (!function_exists('str_contains')) {
-    function str_contains(string $haystack, string $needle): bool
-    {
-        return $needle === '' || strpos($haystack, $needle) !== false;
-    }
-}
-
-if (!function_exists('str_ends_with')) {
-    function str_ends_with(string $haystack, string $needle): bool
-    {
-        if ($needle === '') {
-            return true;
-        }
-
-        return substr($haystack, -strlen($needle)) === $needle;
-    }
-}
+require_once __DIR__ . '/../compatibility.php';
 
 if (!function_exists('admin_base_path')) {
     function admin_base_path(): string
